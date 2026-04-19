@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "10k Steps",
+    "slug": "10k-steps",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "fr.corpogames.10ksteps",
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Cette application lit vos données de pas pour afficher votre progression quotidienne et mensuelle.",
+        "NSHealthUpdateUsageDescription": "Cette application ne modifie pas vos données de santé."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "fr.corpogames.steps10k",
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.ACTIVITY_RECOGNITION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "react-native-health",
+        {
+          "isClinicalDataEnabled": false
+        }
+      ]
+    ],
+    "scheme": "10ksteps",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d40d0fb6-265c-4bec-bc3d-922f4dadd7ff"
+      }
+    }
+  }
+}
