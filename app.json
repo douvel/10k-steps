@@ -17,7 +17,8 @@
       "bundleIdentifier": "fr.corpogames.10ksteps",
       "infoPlist": {
         "NSHealthShareUsageDescription": "Cette application lit vos données de pas pour afficher votre progression quotidienne et mensuelle.",
-        "NSHealthUpdateUsageDescription": "Cette application ne modifie pas vos données de santé."
+        "NSHealthUpdateUsageDescription": "Cette application ne modifie pas vos données de santé.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -40,7 +41,7 @@
         }
       ]
     ],
-    "scheme": "10ksteps",
+    "scheme": "stepsobjective",
     "experiments": {
       "typedRoutes": true
     },
