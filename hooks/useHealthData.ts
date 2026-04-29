@@ -48,24 +48,40 @@ function startOfDay(date: Date): Date {
 async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistory' | 'hasPermission'>> {
   // react-native-health is a native module and is unavailable in Expo Go.
   // The try/catch below catches "NativeModule not available" gracefully.
-  let AppleHealthKit: typeof import('react-native-health').default;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let AppleHealthKit: any;
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    AppleHealthKit = require('react-native-health').default;
-  } catch {
-    throw new Error('HealthKit module unavailable (Expo Go)');
+    const rnHealth = require('react-native-health');
+    // Handle both CommonJS (module.exports) and ES module (.default) exports
+    AppleHealthKit = rnHealth?.default ?? rnHealth;
+  } catch (e) {
+    throw new Error('HealthKit module load failed: ' + String(e));
+  }
+
+  if (!AppleHealthKit || typeof AppleHealthKit.initHealthKit !== 'function') {
+    throw new Error(
+      'HealthKit: initHealthKit not found. Module keys: ' +
+        Object.keys(AppleHealthKit ?? {}).join(', ')
+    );
   }
 
   // Request HealthKit permission for StepCount read access
   await new Promise<void>((resolve, reject) => {
-    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS, (err) => {
-      if (err) reject(new Error('HealthKit permission denied'));
+    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS, (err: string | null) => {
+      // Some versions pass err="null" (string) or {} (empty object) on success — treat those as success
+      const realError =
+        err &&
+        err !== 'null' &&
+        !(typeof err === 'object' && Object.keys(err as object).length === 0);
+      if (realError) reject(new Error('HealthKit init: ' + JSON.stringify(err)));
       else resolve();
     });
   });
 
   const now = new Date();
   const todayStart = startOfDay(now);
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
 
   // Read today's step count (midnight → now)
   const todaySteps = await new Promise<number>((resolve, reject) => {
@@ -78,10 +94,20 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
     );
   });
 
+  // Read yesterday's step count via live endpoint (getDailyStepCountSamples
+  // can lag several hours after midnight before finalising the previous day)
+  const yesterdaySteps = await new Promise<number>((resolve) => {
+    AppleHealthKit.getStepCount(
+      { date: yesterdayStart.toISOString() },
+      (err, result) => resolve(err ? 0 : (result?.value ?? 0)),
+    );
+  });
+
   // Read daily step totals for each day of the current month
   const year = now.getFullYear();
   const month = now.getMonth();
   const monthStart = new Date(year, month, 1);
+  const yesterdayKey = toDateString(yesterdayStart);
 
   const monthHistory = await new Promise<DaySteps[]>((resolve, reject) => {
     AppleHealthKit.getDailyStepCountSamples(
@@ -100,7 +126,12 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
         for (let d = 1; d <= now.getDate(); d++) {
           const date = new Date(year, month, d);
           const key = toDateString(date);
-          history.push({ date: key, steps: map.get(key) ?? 0 });
+          let steps = map.get(key) ?? 0;
+          // Patch: if HealthKit hasn't finalised yesterday yet, use live value
+          if (key === yesterdayKey && steps < yesterdaySteps) {
+            steps = yesterdaySteps;
+          }
+          history.push({ date: key, steps });
         }
         resolve(history);
       },

@@ -1,12 +1,13 @@
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Linking,
+  ActivityIndicator, Linking, Switch,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline } from 'react-native-svg';
 import { useHealthData } from '../../hooks/useHealthData';
 import { useStepGoal } from '../../hooks/useStepGoal';
+import { useState } from 'react';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
@@ -17,14 +18,27 @@ function fmtK(n: number): string {
   return Math.round(n).toLocaleString('fr-FR');
 }
 
+// ── Pace state ────────────────────────────────────────────────────────────────
+
+type PaceState = { color: string; emoji: string; label: string };
+
+function getPaceState(diff: number, goal: number, monthDone: boolean): PaceState {
+  const absDiff = Math.round(Math.abs(diff)).toLocaleString('fr-FR');
+  const plusDiff = Math.round(diff).toLocaleString('fr-FR');
+  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: 'Objectif du mois atteint !' };
+  const ratio = diff / goal;
+  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: `${absDiff} pas/j de retard` };
+  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: `${absDiff} pas/j de retard` };
+  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: `${absDiff} pas/j de retard` };
+  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: 'Dans les temps' };
+  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: `+${plusDiff} pas/j d'avance` };
+  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: `+${plusDiff} pas/j d'avance` };
+  return                      { color: '#16A34A', emoji: '🤩', label: `+${plusDiff} pas/j d'avance` };
+}
+
 // ── XP Hero ───────────────────────────────────────────────────────────────────
 
-const SEGMENTS = 10;
-
 function XPHero({ progress, steps, goal }: { progress: number; steps: number; goal: number }) {
-  const pct = Math.min(1, progress);
-  const filledSegs = Math.floor(pct * SEGMENTS);
-  const partialFill = (pct * SEGMENTS) - filledSegs;
   const over = progress >= 1;
 
   return (
@@ -37,61 +51,70 @@ function XPHero({ progress, steps, goal }: { progress: number; steps: number; go
         <Text style={styles.xpGoal}>/{goal >= 1000 ? `${(goal/1000).toFixed(0)}k` : goal}</Text>
       </View>
       <Text style={styles.xpLabel}>PAS AUJOURD'HUI</Text>
-
-      {/* Segmented XP bar */}
-      <View style={styles.xpBarWrap}>
-        {Array.from({ length: SEGMENTS }).map((_, i) => {
-          let fill = 0;
-          if (i < filledSegs) fill = 1;
-          else if (i === filledSegs) fill = partialFill;
-          return (
-            <View key={i} style={styles.xpSegTrack}>
-              <View style={[
-                styles.xpSegFill,
-                { width: `${fill * 100}%` as `${number}%` },
-                over && { backgroundColor: ACCENT },
-              ]} />
-            </View>
-          );
-        })}
-      </View>
-
-      {/* Percentage badge */}
-      <View style={[styles.xpPctBadge, over && styles.xpPctBadgeOver]}>
-        <Text style={[styles.xpPctText, over && { color: ACCENT }]}>
-          {over ? '✓ OBJECTIF' : `${Math.round(pct * 100)}%`}
-        </Text>
-      </View>
     </View>
   );
 }
 
 // ── Metric card ───────────────────────────────────────────────────────────────
 
-function MetricCard({ label, value, sub, glowing }: {
-  label: string; value: string; sub?: string; glowing?: boolean;
+function MetricCard({ label, value, sub, glowing, topRight }: {
+  label: string; value: string; sub?: string; glowing?: boolean; topRight?: React.ReactNode;
 }) {
   return (
     <View style={[styles.card, glowing && styles.cardGlowing]}>
       <Text style={styles.cardLabel}>{label}</Text>
       <Text style={[styles.cardValue, glowing && styles.cardValueGlowing]}>{value}</Text>
-      {sub ? <Text style={styles.cardSub}>{sub}</Text> : null}
+      {(sub || topRight) ? (
+        <View style={styles.cardFooter}>
+          {sub ? <Text style={styles.cardSub}>{sub}</Text> : null}
+          {topRight ?? null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// ── Monthly progress bar ──────────────────────────────────────────────────────
+
+function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
+  total: number; goal: number; dayOfMonth: number; daysInMonth: number; state: PaceState;
+}) {
+  const { color, emoji, label } = state;
+  const fillPct = Math.min(1, total / goal);
+  const idealPct = Math.min(1, dayOfMonth / daysInMonth);
+  const displayPct = Math.round(fillPct * 100);
+
+  return (
+    <View style={styles.monthBar}>
+      <Text style={styles.monthBarSectionLabel}>PROGRESSION DU MOIS</Text>
+      <View style={styles.monthBarCard}>
+        <View style={styles.monthBarLabels}>
+          <Text style={styles.monthBarTotal}>{fmtK(total)}</Text>
+          <Text style={[styles.monthBarPct, { color }]}>{displayPct}%</Text>
+          <Text style={styles.monthBarGoal}>{fmtK(goal)}</Text>
+        </View>
+        <View style={styles.monthBarOuter}>
+          <View style={styles.monthBarTrack}>
+            <View style={[styles.monthBarFill, { width: `${fillPct * 100}%` as any, backgroundColor: color }]} />
+          </View>
+          <View style={[styles.monthBarTick, { left: `${idealPct * 100}%` as any }]} />
+        </View>
+        <View style={styles.monthBarHints}>
+          <Text style={[styles.monthBarHintRight, { color }]}>{emoji}  {label}</Text>
+        </View>
+      </View>
     </View>
   );
 }
 
 // ── Pace badge ────────────────────────────────────────────────────────────────
 
-function PaceBadge({ avg, goal }: { avg: number; goal: number }) {
-  const ahead = avg >= goal;
-  const diff = Math.round(Math.abs(avg - goal)).toLocaleString('fr-FR');
-  const color = ahead ? ACCENT : '#FF5C2E';
+function PaceBadge({ state }: { state: PaceState }) {
+  const { color, emoji, label } = state;
   return (
-    <View style={[styles.pace, { borderColor: ahead ? `${ACCENT}40` : 'rgba(255,92,46,0.3)', backgroundColor: ahead ? `${ACCENT}18` : 'rgba(255,92,46,0.15)' }]}>
-      <View style={[styles.paceDot, { backgroundColor: color, shadowColor: color }]} />
-      <Text style={[styles.paceText, { color }]}>
-        {ahead ? `+${diff} pas/j d'avance` : `${diff} pas/j de retard`}
-      </Text>
+    <View style={[styles.pace, { borderColor: `${color}50`, backgroundColor: `${color}18` }]}>
+      <Text style={styles.paceEmoji}>{emoji}</Text>
+      <Text style={[styles.paceText, { color }]}>{label}</Text>
     </View>
   );
 }
@@ -102,6 +125,7 @@ export default function DashboardScreen() {
   const { top } = useSafeAreaInsets();
   const { todaySteps, monthHistory, isMockData, isLoading, error, refresh } = useHealthData();
   const { dailyGoal } = useStepGoal();
+  const [excludeToday, setExcludeToday] = useState(false);
 
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -118,7 +142,11 @@ export default function DashboardScreen() {
   const monthlyTotal = historicalTotal + todaySteps;
   const dailyAverage = Math.round(monthlyTotal / daysElapsed);
   const remainingSteps = Math.max(0, monthlyGoal - monthlyTotal);
-  const requiredDailyAverage = Math.round(remainingSteps / daysRemaining);
+  const daysForAverage = excludeToday ? Math.max(1, daysRemaining - 1) : daysRemaining;
+  const requiredDailyAverage = Math.round(remainingSteps / daysForAverage);
+
+  const monthDone = monthlyTotal >= monthlyGoal;
+  const paceState = getPaceState(dailyAverage - dailyGoal, dailyGoal, monthDone);
 
   const goalReached = todaySteps >= dailyGoal;
   const progress = todaySteps / dailyGoal;
@@ -159,18 +187,21 @@ export default function DashboardScreen() {
           <Text style={styles.headerMonth}>{monthName}</Text>
           <Text style={styles.headerTitle}>Tableau de bord</Text>
         </View>
-        <View style={styles.headerIcon}>
-          <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
-            <Path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" />
-          </Svg>
-        </View>
       </View>
 
       {/* XP Hero */}
       <View style={styles.hero}>
         <XPHero progress={progress} steps={todaySteps} goal={dailyGoal} />
-        <PaceBadge avg={dailyAverage} goal={dailyGoal} />
       </View>
+
+      {/* Monthly progress */}
+      <MonthlyProgressBar
+        total={monthlyTotal}
+        goal={monthlyGoal}
+        dayOfMonth={dayOfMonth}
+        daysInMonth={daysInMonth}
+        state={paceState}
+      />
 
       {/* Metrics 2×2 */}
       <View style={styles.grid}>
@@ -180,7 +211,24 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.gridRow}>
           <MetricCard label="RESTANTS CE MOIS" value={fmtK(remainingSteps)} sub={`/ ${fmtK(monthlyGoal)}`} glowing={remainingSteps === 0} />
-          <MetricCard label="MOYENNE REQUISE" value={requiredDailyAverage.toLocaleString('fr-FR')} sub={`sur ${daysRemaining} jours (incluant aujourd'hui)`} glowing={requiredDailyAverage <= dailyGoal} />
+          <MetricCard
+            label="MOYENNE REQUISE"
+            value={requiredDailyAverage.toLocaleString('fr-FR')}
+            sub={excludeToday
+              ? `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (à partir de demain)`
+              : `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (incluant aujourd'hui)`}
+            glowing={requiredDailyAverage <= dailyGoal}
+            topRight={
+              <Switch
+                value={excludeToday}
+                onValueChange={setExcludeToday}
+                trackColor={{ false: 'rgba(255,255,255,0.1)', true: `${ACCENT}60` }}
+                thumbColor={excludeToday ? ACCENT : 'rgba(255,255,255,0.4)'}
+                ios_backgroundColor="rgba(255,255,255,0.1)"
+                style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+              />
+            }
+          />
         </View>
       </View>
 
@@ -242,13 +290,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: -0.5,
   },
-  headerIcon: {
-    width: 38, height: 38, borderRadius: 12,
-    backgroundColor: `${ACCENT}20`,
-    borderWidth: 1, borderColor: `${ACCENT}40`,
-    alignItems: 'center', justifyContent: 'center',
-  },
-
   hero: {
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -273,43 +314,81 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: 'rgba(255,255,255,0.35)',
   },
-  xpBarWrap: {
-    flexDirection: 'row', gap: 3, width: '100%', marginTop: 4,
-  },
-  xpSegTrack: {
-    flex: 1, height: 10, borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-  },
-  xpSegFill: {
-    height: '100%', borderRadius: 3, backgroundColor: ACCENT,
-  },
-  xpPctBadge: {
-    marginTop: 4,
-    paddingHorizontal: 12, paddingVertical: 4,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-  },
-  xpPctBadgeOver: {
-    backgroundColor: `${ACCENT}20`,
-    borderColor: `${ACCENT}50`,
-  },
-  xpPctText: {
-    fontSize: 13, fontWeight: '800', letterSpacing: 1,
-    color: 'rgba(255,255,255,0.6)',
-  },
 
   pace: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14,
     borderWidth: 1,
   },
-  paceDot: {
-    width: 8, height: 8, borderRadius: 4,
-    shadowOffset: { width: 0, height: 0 }, shadowRadius: 6, shadowOpacity: 1, elevation: 4,
-  },
+  paceEmoji: { fontSize: 14 },
   paceText: { fontSize: 12, fontWeight: '600' },
+
+  monthBar: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  monthBarSectionLabel: {
+    fontSize: 10, fontWeight: '700', letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.35)',
+    marginBottom: 8,
+  },
+  monthBarCard: {
+    backgroundColor: CARD_BG,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  monthBarLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 8,
+  },
+  monthBarTotal: {
+    fontSize: 13, fontWeight: '700', color: '#fff',
+  },
+  monthBarPct: {
+    fontSize: 22, fontWeight: '900', color: 'rgba(255,255,255,0.25)',
+    letterSpacing: -0.5,
+  },
+
+  monthBarGoal: {
+    fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.3)',
+  },
+  monthBarOuter: {
+    position: 'relative',
+    height: 18,
+    justifyContent: 'center',
+  },
+  monthBarTrack: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  monthBarFill: {
+    height: '100%',
+    backgroundColor: ACCENT,
+    borderRadius: 5,
+  },
+  monthBarTick: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 2,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderRadius: 1,
+    transform: [{ translateX: -1 }],
+  },
+  monthBarHints: {
+    marginTop: 8,
+  },
+  monthBarHintRight: {
+    fontSize: 13, fontWeight: '700',
+  },
+
 
   grid: { paddingHorizontal: 16, gap: 8 },
   gridRow: { flexDirection: 'row', gap: 8 },
@@ -320,6 +399,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.06)',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
   cardGlowing: {
     backgroundColor: `${ACCENT}12`,
@@ -336,7 +420,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5, lineHeight: 28,
   },
   cardValueGlowing: { color: ACCENT },
-  cardSub: { fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 },
+  cardSub: { fontSize: 10, color: 'rgba(255,255,255,0.3)', flex: 1 },
 
   refreshBtn: {
     marginHorizontal: 16,
