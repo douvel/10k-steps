@@ -35,8 +35,13 @@ function buildMockHistory(): DaySteps[] {
   return history;
 }
 
-function toDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
+// Always use LOCAL calendar date — toISOString() is UTC and causes key
+// mismatches near midnight in non-UTC timezones (e.g. France UTC+2).
+function localDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function startOfDay(date: Date): Date {
@@ -81,7 +86,13 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
 
   const now = new Date();
   const todayStart = startOfDay(now);
-  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const dayOfMonth = now.getDate();
+
+  // Use noon of yesterday — unambiguous in any timezone for getStepCount
+  const yesterdayNoon = new Date(year, month, dayOfMonth - 1, 12, 0, 0);
+  const yesterdayKey = localDateStr(new Date(year, month, dayOfMonth - 1));
 
   // Read today's step count (midnight → now)
   const todaySteps = await new Promise<number>((resolve, reject) => {
@@ -94,20 +105,18 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
     );
   });
 
-  // Read yesterday's step count via live endpoint (getDailyStepCountSamples
-  // can lag several hours after midnight before finalising the previous day)
+  // Read yesterday's steps via live endpoint — getDailyStepCountSamples can
+  // lag hours after midnight before finalising the previous day's aggregate.
+  // Using noon avoids UTC/local boundary ambiguity for getStepCount's date param.
   const yesterdaySteps = await new Promise<number>((resolve) => {
     AppleHealthKit.getStepCount(
-      { date: yesterdayStart.toISOString() },
+      { date: yesterdayNoon.toISOString() },
       (err, result) => resolve(err ? 0 : (result?.value ?? 0)),
     );
   });
 
   // Read daily step totals for each day of the current month
-  const year = now.getFullYear();
-  const month = now.getMonth();
   const monthStart = new Date(year, month, 1);
-  const yesterdayKey = toDateString(yesterdayStart);
 
   const monthHistory = await new Promise<DaySteps[]>((resolve, reject) => {
     AppleHealthKit.getDailyStepCountSamples(
@@ -117,15 +126,16 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
       },
       (err, results) => {
         if (err) { reject(err); return; }
+        // Use LOCAL date — HealthKit may return UTC midnight after consolidation
+        // which would shift dates by 1 in UTC+N timezones near midnight.
         const map = new Map<string, number>();
         for (const r of results) {
-          const key = toDateString(new Date(r.startDate));
+          const key = localDateStr(new Date(r.startDate));
           map.set(key, (map.get(key) ?? 0) + r.value);
         }
         const history: DaySteps[] = [];
-        for (let d = 1; d <= now.getDate(); d++) {
-          const date = new Date(year, month, d);
-          const key = toDateString(date);
+        for (let d = 1; d <= dayOfMonth; d++) {
+          const key = localDateStr(new Date(year, month, d));
           let steps = map.get(key) ?? 0;
           // Patch: if HealthKit hasn't finalised yesterday yet, use live value
           if (key === yesterdayKey && steps < yesterdaySteps) {

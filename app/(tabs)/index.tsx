@@ -134,7 +134,8 @@ export default function DashboardScreen() {
   const daysRemaining = Math.max(1, daysInMonth - dayOfMonth + 1);
 
   const monthlyGoal = dailyGoal * daysInMonth;
-  const todayKey = now.toISOString().split('T')[0];
+  // Use local date — toISOString() is UTC and shifts dates near midnight in UTC+N zones
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   // Always use live todaySteps — getDailyStepCountSamples can lag or omit today entirely
   const historicalTotal = monthHistory
     .filter(d => d.date !== todayKey)
