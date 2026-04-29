@@ -13,8 +13,8 @@ const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
 
 function fmtK(n: number): string {
-  if (n >= 10000) return `${(n / 1000).toFixed(1)}k`;
-  return n.toLocaleString('fr-FR');
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return Math.round(n).toLocaleString('fr-FR');
 }
 
 // ── XP Hero ───────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ function MetricCard({ label, value, sub, glowing }: {
 
 function PaceBadge({ avg, goal }: { avg: number; goal: number }) {
   const ahead = avg >= goal;
-  const diff = Math.abs(avg - goal).toLocaleString('fr-FR');
+  const diff = Math.round(Math.abs(avg - goal)).toLocaleString('fr-FR');
   const color = ahead ? ACCENT : '#FF5C2E';
   return (
     <View style={[styles.pace, { borderColor: ahead ? `${ACCENT}40` : 'rgba(255,92,46,0.3)', backgroundColor: ahead ? `${ACCENT}18` : 'rgba(255,92,46,0.15)' }]}>
@@ -107,7 +107,7 @@ export default function DashboardScreen() {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const dayOfMonth = now.getDate();
   const daysElapsed = Math.max(1, dayOfMonth);
-  const daysRemaining = Math.max(1, daysInMonth - dayOfMonth);
+  const daysRemaining = Math.max(1, daysInMonth - dayOfMonth + 1);
 
   const monthlyGoal = dailyGoal * daysInMonth;
   const todayKey = now.toISOString().split('T')[0];
@@ -180,7 +180,7 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.gridRow}>
           <MetricCard label="RESTANTS CE MOIS" value={fmtK(remainingSteps)} sub={`/ ${fmtK(monthlyGoal)}`} glowing={remainingSteps === 0} />
-          <MetricCard label="MOYENNE REQUISE" value={requiredDailyAverage.toLocaleString('fr-FR')} sub={`sur ${daysRemaining} jours`} glowing={requiredDailyAverage <= dailyGoal} />
+          <MetricCard label="MOYENNE REQUISE" value={requiredDailyAverage.toLocaleString('fr-FR')} sub={`sur ${daysRemaining} jours (incluant aujourd'hui)`} glowing={requiredDailyAverage <= dailyGoal} />
         </View>
       </View>
 
