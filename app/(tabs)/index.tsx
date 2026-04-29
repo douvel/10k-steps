@@ -219,7 +219,7 @@ export default function DashboardScreen() {
               ? `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (à partir de demain)`
               : `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (incluant aujourd'hui)`}
             glowing={requiredDailyAverage <= dailyGoal}
-            topRight={
+            topRight={daysRemaining > 1 ? (
               <Switch
                 value={excludeToday}
                 onValueChange={setExcludeToday}
@@ -228,7 +228,7 @@ export default function DashboardScreen() {
                 ios_backgroundColor="rgba(255,255,255,0.1)"
                 style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
               />
-            }
+            ) : undefined}
           />
         </View>
       </View>

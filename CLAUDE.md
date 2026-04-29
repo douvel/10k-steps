@@ -11,6 +11,7 @@
 - `daysRemaining` **inclut aujourd'hui** : `daysInMonth - dayOfMonth + 1`.
 - La carte "MOYENNE REQUISE" affiche `sur X jours (incluant aujourd'hui)`.
 - Toggle "exclure aujourd'hui" disponible sur la carte : utilise `daysRemaining - 1`.
+- Le toggle est **masqué le dernier jour du mois** (`daysRemaining === 1`), car exclure aujourd'hui ne laisserait aucun jour.
 
 ### Locale
 - Tous les nombres sont formatés en `fr-FR`.
