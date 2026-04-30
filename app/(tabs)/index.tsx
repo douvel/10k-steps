@@ -385,9 +385,10 @@ const styles = StyleSheet.create({
   },
   monthBarHints: {
     marginTop: 8,
+    alignItems: 'center',
   },
   monthBarHintRight: {
-    fontSize: 13, fontWeight: '700',
+    fontSize: 15, fontWeight: '700',
   },
 
 
