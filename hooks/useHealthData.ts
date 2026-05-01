@@ -72,8 +72,11 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
   }
 
   // Request HealthKit permission for StepCount read access
+  // On the iOS Simulator, initHealthKit's callback can silently never fire — guard with a 5s timeout.
   await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('HealthKit init timed out')), 5000);
     AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS, (err: string | null) => {
+      clearTimeout(timer);
       // Some versions pass err="null" (string) or {} (empty object) on success — treat those as success
       const realError =
         err &&
@@ -230,8 +233,11 @@ export function useHealthData() {
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
       let data: Pick<HealthState, 'todaySteps' | 'monthHistory' | 'hasPermission'>;
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('HealthKit fetch timed out (simulator?)')), 5000)
+      );
       if (Platform.OS === 'ios') {
-        data = await fetchIOS();
+        data = await Promise.race([fetchIOS(), timeoutPromise]);
       } else {
         data = await fetchAndroid();
       }
