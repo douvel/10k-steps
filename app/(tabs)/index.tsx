@@ -20,20 +20,22 @@ function fmtK(n: number): string {
 
 // ── Pace state ────────────────────────────────────────────────────────────────
 
-type PaceState = { color: string; emoji: string; label: string };
+type PaceState = { color: string; emoji: string; label: string; totalLabel: string };
 
-function getPaceState(diff: number, goal: number, monthDone: boolean): PaceState {
+function getPaceState(diff: number, goal: number, cumulativeDelta: number, monthDone: boolean): PaceState {
   const absDiff = Math.round(Math.abs(diff)).toLocaleString('fr-FR');
   const plusDiff = Math.round(diff).toLocaleString('fr-FR');
-  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: 'Objectif du mois atteint !' };
+  const absTotal = Math.round(Math.abs(cumulativeDelta)).toLocaleString('fr-FR');
+  const plusTotal = Math.round(cumulativeDelta).toLocaleString('fr-FR');
+  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: 'Objectif du mois atteint !', totalLabel: 'Objectif du mois atteint !' };
   const ratio = diff / goal;
-  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: `${absDiff} pas/j de retard` };
-  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: `${absDiff} pas/j de retard` };
-  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: `${absDiff} pas/j de retard` };
-  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: 'Dans les temps' };
-  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: `+${plusDiff} pas/j d'avance` };
-  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: `+${plusDiff} pas/j d'avance` };
-  return                      { color: '#16A34A', emoji: '🤩', label: `+${plusDiff} pas/j d'avance` };
+  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
+  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
+  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
+  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: 'Dans les temps', totalLabel: 'Dans les temps' };
+  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
+  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
+  return                      { color: '#16A34A', emoji: '🤩', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
 }
 
 // ── XP Hero ───────────────────────────────────────────────────────────────────
@@ -79,7 +81,8 @@ function MetricCard({ label, value, sub, glowing, topRight }: {
 function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
   total: number; goal: number; dayOfMonth: number; daysInMonth: number; state: PaceState;
 }) {
-  const { color, emoji, label } = state;
+  const { color, emoji, label, totalLabel } = state;
+  const [showPerDay, setShowPerDay] = useState(false);
   const fillPct = Math.min(1, total / goal);
   const idealPct = Math.min(1, dayOfMonth / daysInMonth);
   const displayPct = Math.round(fillPct * 100);
@@ -100,7 +103,9 @@ function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
           <View style={[styles.monthBarTick, { left: `${idealPct * 100}%` as any }]} />
         </View>
         <View style={styles.monthBarHints}>
-          <Text style={[styles.monthBarHintRight, { color }]}>{emoji}  {label}</Text>
+          <TouchableOpacity onPress={() => setShowPerDay(s => !s)} activeOpacity={0.7}>
+            <Text style={[styles.monthBarHintRight, { color }]}>{emoji}  {showPerDay ? label : totalLabel}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -147,7 +152,8 @@ export default function DashboardScreen() {
   const requiredDailyAverage = Math.round(remainingSteps / daysForAverage);
 
   const monthDone = monthlyTotal >= monthlyGoal;
-  const paceState = getPaceState(dailyAverage - dailyGoal, dailyGoal, monthDone);
+  const cumulativeDelta = monthlyTotal - dailyGoal * daysElapsed;
+  const paceState = getPaceState(dailyAverage - dailyGoal, dailyGoal, cumulativeDelta, monthDone);
 
   const goalReached = todaySteps >= dailyGoal;
   const progress = todaySteps / dailyGoal;
