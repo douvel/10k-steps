@@ -28,7 +28,7 @@ function buildMockHistory(): DaySteps[] {
   for (let d = 1; d <= dayOfMonth; d++) {
     const date = new Date(year, month, d);
     history.push({
-      date: toDateString(date),
+      date: localDateStr(date),
       steps: 6000 + Math.floor(Math.random() * 8000),
     });
   }
@@ -203,14 +203,14 @@ async function fetchAndroid(): Promise<Pick<HealthState, 'todaySteps' | 'monthHi
 
   const dayMap = new Map<string, number>();
   for (const record of monthResult.records as Array<{ startTime: string; count: number }>) {
-    const key = toDateString(new Date(record.startTime));
+    const key = localDateStr(new Date(record.startTime));
     dayMap.set(key, (dayMap.get(key) ?? 0) + record.count);
   }
 
   const monthHistory: DaySteps[] = [];
   for (let d = 1; d <= now.getDate(); d++) {
     const date = new Date(now.getFullYear(), now.getMonth(), d);
-    const key = toDateString(date);
+    const key = localDateStr(date);
     monthHistory.push({ date: key, steps: dayMap.get(key) ?? 0 });
   }
 
