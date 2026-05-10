@@ -2,17 +2,12 @@
   "expo": {
     "name": "10k Steps",
     "slug": "10k-steps",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
+"ios": {
       "supportsTablet": false,
       "bundleIdentifier": "fr.corpogames.10ksteps",
       "infoPlist": {
@@ -44,6 +39,12 @@
     "scheme": "stepsobjective",
     "experiments": {
       "typedRoutes": true
+    },
+    "runtimeVersion": "1.1.0",
+    "updates": {
+      "url": "https://u.expo.dev/d40d0fb6-265c-4bec-bc3d-922f4dadd7ff",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
     },
     "extra": {
       "router": {
