@@ -40,6 +40,7 @@ Calcule couleur + emoji + label en fonction de `(dailyAverage - dailyGoal) / dai
 
 - Cette couleur s'applique à la barre, au %, au label sous la barre.
 - Le badge PaceBadge (hero) a été supprimé — l'info est uniquement sous la barre mensuelle.
+- Le label sous la barre affiche par défaut le **retard/avance total cumulé** (`monthlyTotal − dailyGoal × daysElapsed`), ex. `3 600 pas de retard`. **Tap** sur le label → bascule vers la version journalière (`X pas/j de retard`). State local au composant, pas de persistence.
 
 ### Carte "MOYENNE REQUISE"
 - Toggle Switch (sans texte) en bas à droite du sous-titre pour exclure aujourd'hui.
