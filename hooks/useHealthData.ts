@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { HEALTHKIT_PERMISSIONS, HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import { HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import { HealthInitError, initHealthKitOnce, initHealthConnectOnce } from './nativeHealthInit';
 import type AppleHealthKitModule from 'react-native-health';
-import type { HealthKitPermissions } from 'react-native-health';
 
 export interface DaySteps {
   date: string; // YYYY-MM-DD
@@ -89,24 +89,15 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
     );
   }
 
-  // Request HealthKit permission for StepCount read access
-  // On the iOS Simulator, initHealthKit's callback can silently never fire — guard with a 5s timeout.
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new HealthDataError('HealthKit init timed out', 'unavailable')),
-      5000,
-    );
-    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS as unknown as HealthKitPermissions, (err) => {
-      clearTimeout(timer);
-      // Some versions pass err="null" (string) or {} (empty object) on success — treat those as success
-      const realError =
-        err &&
-        err !== 'null' &&
-        !(typeof err === 'object' && Object.keys(err as object).length === 0);
-      if (realError) reject(new HealthDataError('HealthKit init: ' + JSON.stringify(err), 'unknown'));
-      else resolve();
-    });
-  });
+  // Request HealthKit permission for StepCount read access. Shared with
+  // useHealthHistory so the two hooks mounted together don't each trigger their
+  // own native init/permission round trip.
+  try {
+    await initHealthKitOnce(AppleHealthKit);
+  } catch (e) {
+    const timedOut = e instanceof HealthInitError && e.timedOut;
+    throw new HealthDataError((e as Error).message, timedOut ? 'unavailable' : 'unknown');
+  }
 
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -188,8 +179,9 @@ async function fetchAndroid(): Promise<Pick<HealthState, 'todaySteps' | 'monthHi
 
   const { initialize, requestPermission, readRecords } = HealthConnect;
 
-  // Initialize Health Connect SDK (required before any other call)
-  const available = await initialize();
+  // Initialize Health Connect SDK (required before any other call). Shared with
+  // useHealthHistory so both hooks don't each trigger their own init call.
+  const available = await initHealthConnectOnce(initialize);
   if (!available) throw new HealthDataError('Health Connect not available on this device', 'unavailable');
 
   // Request read permission for Steps

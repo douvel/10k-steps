@@ -30,6 +30,26 @@ describe('getPaceState', () => {
     expect(state.label).toBe(en.dashboard.paceOnTrack);
   });
 
+  // Exact threshold values, to catch an off-by-one between `<` and `<=` at each
+  // boundary in the table (see utils/pace.ts) — the interior samples above only
+  // exercise the middle of each band, not the edges.
+  it.each([
+    // -10% is excluded from the worst band (strict `<`): falls into the next one down.
+    { diff: -500, emoji: '😥', color: '#EF4444' },
+    // -4% is excluded from the "😥" band (strict `<`): falls into "😯".
+    { diff: -200, emoji: '😯', color: '#3B82F6' },
+    // -1% is included in "on track" (`<=`).
+    { diff: -50, emoji: '🫡', color: '#3B82F6' },
+    // +4% is included in the low-ahead band (`<=`), not the mid one.
+    { diff: 200, emoji: '👍', color: '#3B82F6' },
+    // +10% is included in the mid-ahead band (`<=`), not the top one.
+    { diff: 500, emoji: '💪', color: '#4ADE80' },
+  ])('at the exact boundary, diff=$diff maps to $emoji / $color', ({ diff, emoji, color }) => {
+    const state = getPaceState(en, 'en-US', diff, GOAL, diff, false);
+    expect(state.emoji).toBe(emoji);
+    expect(state.color).toBe(color);
+  });
+
   it('formats the per-day and cumulative labels independently', () => {
     const state = getPaceState(en, 'en-US', -600, GOAL, -12000, false);
     expect(state.label).toBe(en.dashboard.paceBehindPerDay('600'));

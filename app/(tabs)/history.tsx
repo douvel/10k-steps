@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
@@ -6,6 +6,7 @@ import { useSharedHealthData, useSharedHealthHistory } from '../../contexts/Heal
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useLocale } from '../../i18n';
 import { fmtK } from '../../utils/format';
+import { computeMonthlyStats, computeYearlyStats } from '../../utils/historyStats';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
@@ -14,13 +15,14 @@ const CARD_BG = '#1A1A22';
 // ── Generic bar chart ─────────────────────────────────────────────────────────
 
 function BarChart({
-  bars, goal, labelFirst, labelMid, labelLast,
+  bars, goal, labelFirst, labelMid, labelLast, accessibilityLabel,
 }: {
   bars: { value: number; highlight?: boolean; label?: string }[];
   goal?: number;
   labelFirst?: string;
   labelMid?: string;
   labelLast?: string;
+  accessibilityLabel: string;
 }) {
   const chartW = 320;
   const chartH = 120;
@@ -30,7 +32,10 @@ function BarChart({
   const goalY = goal ? (1 - goal / maxVal) * chartH : undefined;
 
   return (
-    <Svg width={chartW} height={chartH + 20} style={{ overflow: 'visible' }}>
+    <Svg
+      width={chartW} height={chartH + 20} style={{ overflow: 'visible' }}
+      accessible accessibilityRole="image" accessibilityLabel={accessibilityLabel}
+    >
       {goalY !== undefined && (
         <>
           <Line x1={0} y1={goalY} x2={chartW} y2={goalY}
@@ -65,7 +70,7 @@ function BarChart({
 // ── Calendar heatmap ──────────────────────────────────────────────────────────
 
 function CalendarHeatmap({ history, goal }: { history: { date: string; steps: number }[]; goal: number }) {
-  const { t } = useLocale();
+  const { t, localeTag } = useLocale();
   const now = new Date();
   const today = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -95,7 +100,11 @@ function CalendarHeatmap({ history, goal }: { history: { date: string; steps: nu
             const cell = row[ci];
             if (!cell || cell.day === 0) return <View key={ci} style={hm.cell} />;
             if (cell.future) return (
-              <View key={ci} style={[hm.cell, hm.cellFuture]}>
+              <View
+                key={ci} style={[hm.cell, hm.cellFuture]}
+                accessible accessibilityRole="text"
+                accessibilityLabel={t.history.dayCellFutureA11yLabel(cell.day)}
+              >
                 <Text style={hm.daynumFuture}>{cell.day}</Text>
               </View>
             );
@@ -104,7 +113,12 @@ function CalendarHeatmap({ history, goal }: { history: { date: string; steps: nu
             const bg = ratio >= 1 ? (isToday ? ACCENT : `${ACCENT}80`) : ratio >= 0.7 ? `${ACCENT}30` : 'rgba(255,255,255,0.07)';
             const numColor = ratio >= 1 ? (isToday ? '#000' : 'rgba(0,0,0,0.7)') : 'rgba(255,255,255,0.4)';
             return (
-              <View key={ci} style={[hm.cell, { backgroundColor: bg, borderWidth: isToday ? 1.5 : 0, borderColor: isToday ? ACCENT : 'transparent' }]}>
+              <View
+                key={ci}
+                style={[hm.cell, { backgroundColor: bg, borderWidth: isToday ? 1.5 : 0, borderColor: isToday ? ACCENT : 'transparent' }]}
+                accessible accessibilityRole="text"
+                accessibilityLabel={t.history.dayCellA11yLabel(cell.day, cell.steps.toLocaleString(localeTag))}
+              >
                 <Text style={[hm.daynum, { color: numColor }]}>{cell.day}</Text>
               </View>
             );
@@ -225,6 +239,7 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
             labelFirst="1"
             labelMid={String(Math.ceil(totalDays / 2))}
             labelLast={String(totalDays)}
+            accessibilityLabel={`${t.history.stepsPerDay}. ${t.common.average}: ${fmtK(avgSteps, localeTag)}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
       </View>
@@ -245,14 +260,10 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
   const { monthlyTotals, isLoading } = useSharedHealthHistory();
 
   const now = new Date();
-  const daysInYear = 365;
-  const yearlyGoal = dailyGoal * daysInYear;
-  const totalSteps = monthlyTotals.reduce((s, m) => s + m.steps, 0);
-  const bestMonth = monthlyTotals.reduce((best, m) => m.steps > best.steps ? m : best, monthlyTotals[0] ?? { steps: 0, month: -1, year: 0 });
-  const monthsAbove = monthlyTotals.filter(m => {
-    const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
-    return m.steps >= dailyGoal * daysInMonth;
-  }).length;
+  const { totalSteps, bestMonth, monthsAbove } = useMemo(
+    () => computeMonthlyStats(monthlyTotals, dailyGoal),
+    [monthlyTotals, dailyGoal],
+  );
 
   if (isLoading) return <Loader />;
 
@@ -282,6 +293,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
             labelFirst={MONTH_NAMES_SHORT[monthlyTotals[0]?.month ?? 0]}
             labelMid={MONTH_NAMES_SHORT[monthlyTotals[Math.floor(monthlyTotals.length / 2)]?.month ?? 5]}
             labelLast={MONTH_NAMES_SHORT[monthlyTotals[monthlyTotals.length - 1]?.month ?? now.getMonth()]}
+            accessibilityLabel={`${t.history.stepsPerMonth(now.getFullYear())}. ${t.history.best}: ${bestMonth.month >= 0 ? MONTH_NAMES_SHORT[bestMonth.month] : '—'}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
         {/* Month labels row */}
@@ -328,8 +340,10 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
 
   const now = new Date();
   const currentYear = now.getFullYear();
-  const totalSteps = yearlyTotals.reduce((s, y) => s + y.steps, 0);
-  const bestYear = yearlyTotals.reduce((best, y) => y.steps > best.steps ? y : best, yearlyTotals[0] ?? { year: currentYear, steps: 0 });
+  const { totalSteps, bestYear } = useMemo(
+    () => computeYearlyStats(yearlyTotals, currentYear),
+    [yearlyTotals, currentYear],
+  );
   const yearGoal = dailyGoal * 365;
 
   if (isLoading) return <Loader />;
@@ -356,6 +370,7 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
             bars={yearlyTotals.map(y => ({ value: y.steps, highlight: y.year === currentYear }))}
             labelFirst={String(yearlyTotals[0]?.year ?? '')}
             labelLast={String(currentYear)}
+            accessibilityLabel={`${t.history.stepsPerYear}. ${t.history.bestYear}: ${bestYear.year}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
       </View>

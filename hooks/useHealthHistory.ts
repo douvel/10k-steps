@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { HEALTHKIT_PERMISSIONS, HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import { HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import { HealthInitError, initHealthKitOnce, initHealthConnectOnce } from './nativeHealthInit';
 import type AppleHealthKitModule from 'react-native-health';
-import type { HealthKitPermissions } from 'react-native-health';
 
 export interface MonthTotal {
   year: number;
@@ -37,6 +37,15 @@ export interface HealthHistoryState {
 
 const YEARS_BACK = 4;
 
+// Always use LOCAL calendar date — toISOString() is UTC and causes key
+// mismatches near midnight in non-UTC timezones (e.g. France UTC+2).
+function localDateStr(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function buildMockMonthly(now: Date): MonthTotal[] {
   const seed = [210000, 185000, 230000, 195000, 220000, 200000, 175000, 215000, 240000, 180000, 205000, 195000];
   const result: MonthTotal[] = [];
@@ -70,21 +79,14 @@ async function fetchIOSHistory(): Promise<Pick<HealthHistoryState, 'monthlyTotal
     throw new HealthDataError('HealthKit: initHealthKit not found', 'unavailable');
   }
 
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new HealthDataError('HealthKit init timed out', 'unavailable')),
-      5000,
-    );
-    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS as unknown as HealthKitPermissions, (err) => {
-      clearTimeout(timer);
-      const realError =
-        err &&
-        err !== 'null' &&
-        !(typeof err === 'object' && Object.keys(err as object).length === 0);
-      if (realError) reject(new HealthDataError('HealthKit init: ' + JSON.stringify(err), 'unknown'));
-      else resolve();
-    });
-  });
+  // Shared with useHealthData so the two hooks mounted together don't each
+  // trigger their own native init/permission round trip.
+  try {
+    await initHealthKitOnce(AppleHealthKit);
+  } catch (e) {
+    const timedOut = e instanceof HealthInitError && e.timedOut;
+    throw new HealthDataError((e as Error).message, timedOut ? 'unavailable' : 'unknown');
+  }
 
   const now = new Date();
   const startYear = now.getFullYear() - YEARS_BACK + 1;
@@ -100,15 +102,44 @@ async function fetchIOSHistory(): Promise<Pick<HealthHistoryState, 'monthlyTotal
     );
   });
 
-  // Aggregate by month-key and year-key
+  // Aggregate by month-key, year-key, and day-key (day-key only needed to apply
+  // the yesterday-lag patch below).
   const monthMap = new Map<string, number>();
   const yearMap = new Map<number, number>();
+  const dayMap = new Map<string, number>();
 
   for (const r of rawSamples) {
     const d = new Date(r.startDate);
     const monthKey = `${d.getFullYear()}-${d.getMonth()}`;
     monthMap.set(monthKey, (monthMap.get(monthKey) ?? 0) + r.value);
     yearMap.set(d.getFullYear(), (yearMap.get(d.getFullYear()) ?? 0) + r.value);
+    const dayKey = localDateStr(d);
+    dayMap.set(dayKey, (dayMap.get(dayKey) ?? 0) + r.value);
+  }
+
+  // Read yesterday's steps via the live endpoint — getDailyStepCountSamples can
+  // lag hours after midnight before finalising the previous day's aggregate
+  // (see useHealthData.ts). Top up the month/year totals with the difference so
+  // they stay consistent with the Dashboard's corrected total.
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+  const yesterdayNoon = new Date(
+    yesterday.getFullYear(),
+    yesterday.getMonth(),
+    yesterday.getDate(),
+    12, 0, 0,
+  );
+  const yesterdaySteps = await new Promise<number>((resolve) => {
+    AppleHealthKit.getStepCount(
+      { date: yesterdayNoon.toISOString() },
+      (err, result) => resolve(err ? 0 : (result?.value ?? 0)),
+    );
+  });
+  const yesterdayRecorded = dayMap.get(localDateStr(yesterday)) ?? 0;
+  if (yesterdaySteps > yesterdayRecorded) {
+    const delta = yesterdaySteps - yesterdayRecorded;
+    const monthKey = `${yesterday.getFullYear()}-${yesterday.getMonth()}`;
+    monthMap.set(monthKey, (monthMap.get(monthKey) ?? 0) + delta);
+    yearMap.set(yesterday.getFullYear(), (yearMap.get(yesterday.getFullYear()) ?? 0) + delta);
   }
 
   const monthlyTotals: MonthTotal[] = [];
@@ -137,7 +168,8 @@ async function fetchAndroidHistory(): Promise<Pick<HealthHistoryState, 'monthlyT
   }
 
   const { initialize, requestPermission, readRecords } = HealthConnect;
-  const available = await initialize();
+  // Shared with useHealthData so both hooks don't each trigger their own init call.
+  const available = await initHealthConnectOnce(initialize);
   if (!available) throw new HealthDataError('Health Connect not available', 'unavailable');
 
   const granted = await requestPermission([{ accessType: 'read', recordType: HEALTH_CONNECT_STEPS_RECORD }]);

@@ -57,6 +57,7 @@ Définie dans `utils/pace.ts` (testée dans `utils/__tests__/pace.test.ts`), imp
 - `useHealthData()` et `useHealthHistory()` (dans `hooks/`) ne doivent **jamais** être appelés directement depuis un écran — toujours passer par `useSharedHealthData()` / `useSharedHealthHistory()` (`contexts/HealthDataContext.tsx`).
 - `HealthDataProvider` est monté une seule fois dans `app/(tabs)/_layout.tsx` et fait le fetch une seule fois pour toute la session ; sans ça, changer d'onglet (Dashboard ↔ Historique ↔ sous-onglets Jours/Mois/Années) redéclenche un fetch HealthKit complet à chaque montage.
 - Le provider écoute aussi `AppState` : au retour au premier plan (background → active), il relance `refresh()` sur les deux hooks pour ne pas afficher des données figées.
+- Les deux hooks ont chacun besoin d'initialiser HealthKit/Health Connect ; `hooks/nativeHealthInit.ts` (`initHealthKitOnce`/`initHealthConnectOnce`) met en cache la promesse d'init en cours pour qu'un montage simultané des deux hooks ne déclenche **qu'un seul** round-trip natif au lieu de deux. Le cache se vide une fois la promesse réglée, donc un `refresh()` ultérieur relance bien un init frais.
 
 ### Erreurs typées (`HealthErrorKind`)
 Les deux hooks classifient toute erreur de fetch en trois catégories (voir le type `HealthErrorKind` dans `hooks/useHealthData.ts`/`useHealthHistory.ts`) :
@@ -67,8 +68,17 @@ Les deux hooks classifient toute erreur de fetch en trois catégories (voir le t
 - La bannière du Dashboard (`index.tsx`) distingue les trois textes (`mockBannerText` / `permissionDeniedBannerText` / `errorBannerText` dans `i18n/`).
 
 ## Bug connu — Lag HealthKit après minuit
-`getDailyStepCountSamples` peut mettre plusieurs heures à finaliser les données du jour qui vient de se terminer. Fix dans `useHealthData.ts` : on appelle aussi `getStepCount` sur **hier** (endpoint temps réel) et on patche `monthHistory` si la valeur historique est inférieure à la valeur live.
+`getDailyStepCountSamples` peut mettre plusieurs heures à finaliser les données du jour qui vient de se terminer. Fix appliqué dans **les deux** hooks (`useHealthData.ts` pour `monthHistory`, `useHealthHistory.ts` pour les totaux du mois/année en cours) : on appelle aussi `getStepCount` sur **hier** (endpoint temps réel) et on patche la valeur historique si elle est inférieure à la valeur live. Si une nouvelle vue agrège des pas côté iOS, penser à répliquer ce patch — sinon son total peut diverger du Dashboard pendant les quelques heures qui suivent minuit.
 
 ## Tests
-- Jest (`jest-expo`) est configuré (`npm test`), mais uniquement pour les fonctions **pures** extraites dans `utils/` (`format.ts`, `pace.ts`, `monthProgress.ts`) — pas de rendu de composants pour l'instant.
-- Toute nouvelle logique de calcul (dates, pas, moyennes, états) doit être écrite comme fonction pure dans `utils/` plutôt qu'inline dans un écran, pour rester testable. Voir `utils/__tests__/` pour les exemples et les cas limites déjà couverts (arrondis autour du seuil `k`, `daysRemaining` le dernier jour du mois, etc.).
+- Jest (`jest-expo`) est configuré (`npm test`), mais uniquement pour les fonctions **pures** extraites dans `utils/` (`format.ts`, `pace.ts`, `monthProgress.ts`, `historyStats.ts`) — pas de rendu de composants pour l'instant.
+- Toute nouvelle logique de calcul (dates, pas, moyennes, états) doit être écrite comme fonction pure dans `utils/` plutôt qu'inline dans un écran, pour rester testable. Voir `utils/__tests__/` pour les exemples et les cas limites déjà couverts (arrondis autour du seuil `k`, `daysRemaining` le dernier jour du mois, seuils exacts de `getPaceState`, etc.).
+- `historyStats.ts` (`computeMonthlyStats`/`computeYearlyStats`) porte les agrégations de l'écran Historique (meilleur mois/année, total, mois au-dessus de l'objectif) ; utilisées via `useMemo` dans `history.tsx` (`MoisView`/`AnneesView`) plutôt que recalculées à chaque render.
+
+## Accessibilité — graphiques de l'écran Historique
+- `BarChart` (SVG, `history.tsx`) prend un `accessibilityLabel` **obligatoire** : chaque vue (Jours/Mois/Années) le compose à partir de fragments déjà traduits (`t.history.*`, `t.common.average`/`total`) plutôt que d'ajouter une chaîne en dur.
+- `CalendarHeatmap` : chaque cellule de jour est individuellement accessible (`accessibilityRole="text"`), via les clés `t.history.dayCellA11yLabel`/`dayCellFutureA11yLabel`.
+
+## Dépendances natives
+- `react-native-reanimated` est une **peer dependency d'`expo-router`** (utilisée en interne par `@react-navigation/native-stack`/`bottom-tabs`) même si aucun écran ne l'importe directement — ne pas la retirer en la croyant inutilisée.
+- `react-native-gesture-handler` a été retirée (aucun usage, ni direct ni transitif). Après toute modification des dépendances natives, lancer `cd ios && pod install` (avec `LANG=en_US.UTF-8` si CocoaPods râle sur l'encodage) avant le prochain build iOS.
