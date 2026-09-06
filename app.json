@@ -7,12 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-"ios": {
+    "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "fr.corpogames.10ksteps",
       "infoPlist": {
-        "NSHealthShareUsageDescription": "Cette application lit vos données de pas pour afficher votre progression quotidienne et mensuelle.",
-        "NSHealthUpdateUsageDescription": "Cette application ne modifie pas vos données de santé.",
+        "NSHealthShareUsageDescription": "This app reads your step data to show your daily and monthly progress.",
+        "NSHealthUpdateUsageDescription": "This app does not modify your health data.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -34,7 +34,8 @@
         {
           "isClinicalDataEnabled": false
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "scheme": "stepsobjective",
     "experiments": {

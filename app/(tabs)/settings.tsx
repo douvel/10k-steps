@@ -5,14 +5,17 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useStepGoal } from '../../hooks/useStepGoal';
+import { useLocale, SUPPORTED_LOCALES } from '../../i18n';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
 
 const PRESETS = [5000, 7500, 10000, 12500, 15000];
+const LOCALE_FLAGS: Record<string, string> = { en: '🇬🇧', fr: '🇫🇷' };
 
 export default function SettingsScreen() {
+  const { t, localeTag, preference, setLocalePreference } = useLocale();
   const { dailyGoal, saveGoal, isLoading } = useStepGoal();
   const [inputValue, setInputValue] = useState('');
   const [saved, setSaved] = useState(false);
@@ -25,11 +28,11 @@ export default function SettingsScreen() {
   const handleSave = async () => {
     const parsed = parseInt(inputValue, 10);
     if (isNaN(parsed) || parsed <= 0) {
-      Alert.alert('Valeur invalide', 'Entrez un objectif supérieur à 0.');
+      Alert.alert(t.settings.invalidValueTitle, t.settings.invalidValueMessage);
       return;
     }
     if (parsed > 100_000) {
-      Alert.alert('Valeur trop élevée', "L'objectif ne peut pas dépasser 100\u202f000 pas.");
+      Alert.alert(t.settings.valueTooHighTitle, t.settings.valueTooHighMessage((100_000).toLocaleString(localeTag)));
       return;
     }
     await saveGoal(parsed);
@@ -50,20 +53,20 @@ export default function SettingsScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerSub}>Configuration</Text>
-          <Text style={styles.headerTitle}>Paramètres</Text>
+          <Text style={styles.headerSub}>{t.settings.configuration}</Text>
+          <Text style={styles.headerTitle}>{t.tabs.settingsTitle}</Text>
         </View>
 
         {/* Current goal */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>OBJECTIF ACTUEL</Text>
+          <Text style={styles.sectionLabel}>{t.settings.currentGoal}</Text>
           <View style={styles.currentGoalBox}>
             {isLoading ? (
               <Text style={styles.currentGoalNum}>…</Text>
             ) : (
               <>
-                <Text style={styles.currentGoalNum}>{dailyGoal.toLocaleString('fr-FR')}</Text>
-                <Text style={styles.currentGoalUnit}>pas / jour</Text>
+                <Text style={styles.currentGoalNum}>{dailyGoal.toLocaleString(localeTag)}</Text>
+                <Text style={styles.currentGoalUnit}>{t.settings.stepsPerDayUnit}</Text>
               </>
             )}
           </View>
@@ -71,7 +74,7 @@ export default function SettingsScreen() {
 
         {/* Presets */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>OBJECTIFS RAPIDES</Text>
+          <Text style={styles.sectionLabel}>{t.settings.quickGoals}</Text>
           <View style={styles.presets}>
             {PRESETS.map(p => {
               const active = dailyGoal === p;
@@ -93,7 +96,7 @@ export default function SettingsScreen() {
 
         {/* Custom input */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>OBJECTIF PERSONNALISÉ</Text>
+          <Text style={styles.sectionLabel}>{t.settings.customGoal}</Text>
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
@@ -106,12 +109,12 @@ export default function SettingsScreen() {
               returnKeyType="done"
               onSubmitEditing={handleSave}
             />
-            <Text style={styles.inputUnit}>pas/j</Text>
+            <Text style={styles.inputUnit}>{t.settings.stepsPerDayShort}</Text>
           </View>
           <Text style={styles.hint}>
-            Projection mensuelle :{' '}
-            <Text style={styles.hintBold}>{monthlyProjection.toLocaleString('fr-FR')} pas</Text>
-            {' '}({daysInMonth} jours)
+            {t.settings.monthlyProjectionLabel}{' '}
+            <Text style={styles.hintBold}>{monthlyProjection.toLocaleString(localeTag)} {t.settings.stepsWord}</Text>
+            {' '}{t.common.daysParen(daysInMonth)}
           </Text>
         </View>
 
@@ -128,19 +131,40 @@ export default function SettingsScreen() {
             activeOpacity={0.8}
           >
             <Text style={[styles.saveBtnText, inputValue === '' && !saved && styles.saveBtnTextDisabled]}>
-              {saved ? '✓ ENREGISTRÉ' : 'ENREGISTRER'}
+              {saved ? t.settings.saved : t.settings.save}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Info card */}
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>COMMENT ÇA MARCHE</Text>
+          <Text style={styles.infoTitle}>{t.settings.howItWorksTitle}</Text>
           <Text style={styles.infoText}>
-            L'objectif mensuel est calculé automatiquement :{' '}
-            <Text style={styles.infoTextBold}>objectif quotidien × jours du mois</Text>.{' '}
-            La moyenne requise est mise à jour chaque jour pour vous garder sur la bonne trajectoire.
+            {t.settings.howItWorksPre}
+            <Text style={styles.infoTextBold}>{t.settings.howItWorksBold}</Text>
+            {t.settings.howItWorksPost}
           </Text>
+        </View>
+
+        {/* Language — low-key, but legible */}
+        <View style={styles.languageSection}>
+          <Text style={styles.languageLabel}>{t.settings.language}</Text>
+          <View style={styles.languageRow}>
+            {SUPPORTED_LOCALES.map(locale => {
+              const active = preference === locale;
+              return (
+                <TouchableOpacity
+                  key={locale}
+                  style={[styles.flagBtn, active && styles.flagBtnActive]}
+                  onPress={() => setLocalePreference(locale)}
+                  activeOpacity={0.7}
+                  accessibilityLabel={locale === 'fr' ? t.settings.languageFrench : t.settings.languageEnglish}
+                >
+                  <Text style={styles.flagEmoji}>{LOCALE_FLAGS[locale]}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
       </ScrollView>
@@ -225,4 +249,22 @@ const styles = StyleSheet.create({
   },
   infoText: { fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 20 },
   infoTextBold: { color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
+
+  languageSection: { alignItems: 'center', marginTop: 24 },
+  languageLabel: {
+    fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.25)', marginBottom: 10,
+  },
+  languageRow: { flexDirection: 'row', gap: 10 },
+  flagBtn: {
+    width: 48, height: 40, borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  flagBtnActive: {
+    backgroundColor: `${ACCENT}18`,
+    borderColor: `${ACCENT}60`,
+  },
+  flagEmoji: { fontSize: 22 },
 });

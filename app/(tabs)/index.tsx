@@ -8,39 +8,42 @@ import Svg, { Path, Polyline } from 'react-native-svg';
 import { useHealthData } from '../../hooks/useHealthData';
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useState } from 'react';
+import { useLocale } from '../../i18n';
+import type { Translations } from '../../i18n/locales/en';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
 
-function fmtK(n: number): string {
+function fmtK(n: number, localeTag: string): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return Math.round(n).toLocaleString('fr-FR');
+  return Math.round(n).toLocaleString(localeTag);
 }
 
 // ── Pace state ────────────────────────────────────────────────────────────────
 
 type PaceState = { color: string; emoji: string; label: string; totalLabel: string };
 
-function getPaceState(diff: number, goal: number, cumulativeDelta: number, monthDone: boolean): PaceState {
-  const absDiff = Math.round(Math.abs(diff)).toLocaleString('fr-FR');
-  const plusDiff = Math.round(diff).toLocaleString('fr-FR');
-  const absTotal = Math.round(Math.abs(cumulativeDelta)).toLocaleString('fr-FR');
-  const plusTotal = Math.round(cumulativeDelta).toLocaleString('fr-FR');
-  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: 'Objectif du mois atteint !', totalLabel: 'Objectif du mois atteint !' };
+function getPaceState(t: Translations, localeTag: string, diff: number, goal: number, cumulativeDelta: number, monthDone: boolean): PaceState {
+  const absDiff = Math.round(Math.abs(diff)).toLocaleString(localeTag);
+  const plusDiff = Math.round(diff).toLocaleString(localeTag);
+  const absTotal = Math.round(Math.abs(cumulativeDelta)).toLocaleString(localeTag);
+  const plusTotal = Math.round(cumulativeDelta).toLocaleString(localeTag);
+  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: t.dashboard.paceGoalReached, totalLabel: t.dashboard.paceGoalReached };
   const ratio = diff / goal;
-  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
-  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
-  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: `${absDiff} pas/j de retard`, totalLabel: `${absTotal} pas de retard` };
-  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: 'Dans les temps', totalLabel: 'Dans les temps' };
-  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
-  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
-  return                      { color: '#16A34A', emoji: '🤩', label: `+${plusDiff} pas/j d'avance`, totalLabel: `+${plusTotal} pas d'avance` };
+  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
+  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
+  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
+  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: t.dashboard.paceOnTrack, totalLabel: t.dashboard.paceOnTrack };
+  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
+  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
+  return                      { color: '#16A34A', emoji: '🤩', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
 }
 
 // ── XP Hero ───────────────────────────────────────────────────────────────────
 
 function XPHero({ progress, steps, goal }: { progress: number; steps: number; goal: number }) {
+  const { t, localeTag } = useLocale();
   const over = progress >= 1;
 
   return (
@@ -48,11 +51,11 @@ function XPHero({ progress, steps, goal }: { progress: number; steps: number; go
       {/* Step count */}
       <View style={styles.xpCountRow}>
         <Text style={[styles.xpSteps, over && { color: ACCENT }]}>
-          {Math.floor(steps).toLocaleString('fr-FR')}
+          {Math.floor(steps).toLocaleString(localeTag)}
         </Text>
         <Text style={styles.xpGoal}>/{goal >= 1000 ? `${(goal/1000).toFixed(0)}k` : goal}</Text>
       </View>
-      <Text style={styles.xpLabel}>PAS AUJOURD'HUI</Text>
+      <Text style={styles.xpLabel}>{t.dashboard.stepsToday}</Text>
     </View>
   );
 }
@@ -81,6 +84,7 @@ function MetricCard({ label, value, sub, glowing, topRight }: {
 function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
   total: number; goal: number; dayOfMonth: number; daysInMonth: number; state: PaceState;
 }) {
+  const { t, localeTag } = useLocale();
   const { color, emoji, label, totalLabel } = state;
   const [showPerDay, setShowPerDay] = useState(false);
   const fillPct = Math.min(1, total / goal);
@@ -89,12 +93,12 @@ function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
 
   return (
     <View style={styles.monthBar}>
-      <Text style={styles.monthBarSectionLabel}>PROGRESSION DU MOIS</Text>
+      <Text style={styles.monthBarSectionLabel}>{t.dashboard.monthlyProgressTitle}</Text>
       <View style={styles.monthBarCard}>
         <View style={styles.monthBarLabels}>
-          <Text style={styles.monthBarTotal}>{fmtK(total)}</Text>
+          <Text style={styles.monthBarTotal}>{fmtK(total, localeTag)}</Text>
           <Text style={[styles.monthBarPct, { color }]}>{displayPct}%</Text>
-          <Text style={styles.monthBarGoal}>{fmtK(goal)}</Text>
+          <Text style={styles.monthBarGoal}>{fmtK(goal, localeTag)}</Text>
         </View>
         <View style={styles.monthBarOuter}>
           <View style={styles.monthBarTrack}>
@@ -128,6 +132,7 @@ function PaceBadge({ state }: { state: PaceState }) {
 
 export default function DashboardScreen() {
   const { top } = useSafeAreaInsets();
+  const { t, localeTag } = useLocale();
   const { todaySteps, monthHistory, isMockData, isLoading, error, refresh } = useHealthData();
   const { dailyGoal } = useStepGoal();
   const [excludeToday, setExcludeToday] = useState(false);
@@ -153,19 +158,19 @@ export default function DashboardScreen() {
 
   const monthDone = monthlyTotal >= monthlyGoal;
   const cumulativeDelta = monthlyTotal - dailyGoal * daysElapsed;
-  const paceState = getPaceState(dailyAverage - dailyGoal, dailyGoal, cumulativeDelta, monthDone);
+  const paceState = getPaceState(t, localeTag, dailyAverage - dailyGoal, dailyGoal, cumulativeDelta, monthDone);
 
   const goalReached = todaySteps >= dailyGoal;
   const progress = todaySteps / dailyGoal;
   const pct = Math.min(100, Math.round(progress * 100));
 
-  const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const monthName = now.toLocaleDateString(localeTag, { month: 'long', year: 'numeric' });
 
   if (isLoading) {
     return (
       <View style={[styles.center, { paddingTop: top }]}>
         <ActivityIndicator size="large" color={ACCENT} />
-        <Text style={styles.loadingText}>Chargement…</Text>
+        <Text style={styles.loadingText}>{t.common.loading}</Text>
       </View>
     );
   }
@@ -177,13 +182,13 @@ export default function DashboardScreen() {
       {/* Mock data banner */}
       {isMockData && (
         <View style={styles.mockBanner}>
-          <Text style={styles.mockBannerText}>Données simulées — accès Santé requis</Text>
+          <Text style={styles.mockBannerText}>{t.dashboard.mockBannerText}</Text>
           {error ? <Text style={styles.mockBannerError} selectable>{error}</Text> : null}
           <TouchableOpacity style={styles.mockBannerButton} onPress={() => Linking.openURL('x-apple-health://').catch(() => Linking.openSettings())}>
-            <Text style={styles.mockBannerButtonText}>Ouvrir Réglages Santé</Text>
+            <Text style={styles.mockBannerButtonText}>{t.dashboard.openHealthSettings}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={refresh}>
-            <Text style={styles.mockBannerRetry}>Réessayer</Text>
+            <Text style={styles.mockBannerRetry}>{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -192,7 +197,7 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.headerMonth}>{monthName}</Text>
-          <Text style={styles.headerTitle}>Tableau de bord</Text>
+          <Text style={styles.headerTitle}>{t.tabs.dashboardTitle}</Text>
         </View>
       </View>
 
@@ -213,17 +218,17 @@ export default function DashboardScreen() {
       {/* Metrics 2×2 */}
       <View style={styles.grid}>
         <View style={styles.gridRow}>
-          <MetricCard label="TOTAL DU MOIS" value={fmtK(monthlyTotal)} sub="pas ce mois-ci" />
-          <MetricCard label="MOYENNE / JOUR" value={dailyAverage.toLocaleString('fr-FR')} sub={`sur ${daysElapsed} jours`} glowing={dailyAverage >= dailyGoal} />
+          <MetricCard label={t.dashboard.totalMonth} value={fmtK(monthlyTotal, localeTag)} sub={t.dashboard.stepsThisMonth} />
+          <MetricCard label={t.dashboard.averagePerDay} value={dailyAverage.toLocaleString(localeTag)} sub={t.common.overDays(daysElapsed)} glowing={dailyAverage >= dailyGoal} />
         </View>
         <View style={styles.gridRow}>
-          <MetricCard label="RESTANTS CE MOIS" value={fmtK(remainingSteps)} sub={`/ ${fmtK(monthlyGoal)}`} glowing={remainingSteps === 0} />
+          <MetricCard label={t.dashboard.remainingThisMonth} value={fmtK(remainingSteps, localeTag)} sub={`/ ${fmtK(monthlyGoal, localeTag)}`} glowing={remainingSteps === 0} />
           <MetricCard
-            label="MOYENNE REQUISE"
-            value={requiredDailyAverage.toLocaleString('fr-FR')}
+            label={t.dashboard.requiredAverage}
+            value={requiredDailyAverage.toLocaleString(localeTag)}
             sub={excludeToday
-              ? `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (à partir de demain)`
-              : `sur ${daysForAverage} jour${daysForAverage > 1 ? 's' : ''} (incluant aujourd'hui)`}
+              ? t.dashboard.overDaysFromTomorrow(daysForAverage)
+              : t.dashboard.overDaysIncludingToday(daysForAverage)}
             glowing={requiredDailyAverage <= dailyGoal}
             topRight={daysRemaining > 1 ? (
               <Switch
@@ -246,7 +251,7 @@ export default function DashboardScreen() {
           <Polyline points="1 20 1 14 7 14" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />
           <Path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />
         </Svg>
-        <Text style={styles.refreshBtnText}>ACTUALISER</Text>
+        <Text style={styles.refreshBtnText}>{t.common.refresh}</Text>
       </TouchableOpacity>
     </ScrollView>
   );

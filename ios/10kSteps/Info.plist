@@ -48,9 +48,9 @@
       <true/>
     </dict>
     <key>NSHealthShareUsageDescription</key>
-    <string>Cette application lit vos données de pas pour afficher votre progression quotidienne et mensuelle.</string>
+    <string>This app reads your step data to show your daily and monthly progress.</string>
     <key>NSHealthUpdateUsageDescription</key>
-    <string>Cette application ne modifie pas vos données de santé.</string>
+    <string>This app does not modify your health data.</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>

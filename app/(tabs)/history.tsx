@@ -5,17 +5,16 @@ import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
 import { useHealthData } from '../../hooks/useHealthData';
 import { useHealthHistory } from '../../hooks/useHealthHistory';
 import { useStepGoal } from '../../hooks/useStepGoal';
+import { useLocale } from '../../i18n';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
 
-const MONTH_NAMES_SHORT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-
-function fmtK(n: number): string {
+function fmtK(n: number, localeTag: string): string {
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
   if (n >= 10000) return `${(n / 1000).toFixed(1)}k`;
-  return Math.round(n).toLocaleString('fr-FR');
+  return Math.round(n).toLocaleString(localeTag);
 }
 
 // ── Generic bar chart ─────────────────────────────────────────────────────────
@@ -72,6 +71,7 @@ function BarChart({
 // ── Calendar heatmap ──────────────────────────────────────────────────────────
 
 function CalendarHeatmap({ history, goal }: { history: { date: string; steps: number }[]; goal: number }) {
+  const { t } = useLocale();
   const now = new Date();
   const today = now.getDate();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -91,7 +91,7 @@ function CalendarHeatmap({ history, goal }: { history: { date: string; steps: nu
   return (
     <View>
       <View style={hm.header}>
-        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+        {t.history.dayNamesShort.map((d, i) => (
           <Text key={i} style={hm.dayName}>{d}</Text>
         ))}
       </View>
@@ -118,7 +118,7 @@ function CalendarHeatmap({ history, goal }: { history: { date: string; steps: nu
         </View>
       ))}
       <View style={hm.legend}>
-        {[{ bg: 'rgba(255,255,255,0.07)', label: '< 70%' }, { bg: `${ACCENT}30`, label: '70–100%' }, { bg: `${ACCENT}80`, label: '≥ objectif' }].map(item => (
+        {[{ bg: 'rgba(255,255,255,0.07)', label: t.history.legendBelow }, { bg: `${ACCENT}30`, label: t.history.legendMid }, { bg: `${ACCENT}80`, label: t.history.legendGoal }].map(item => (
           <View key={item.label} style={hm.legendItem}>
             <View style={[hm.legendDot, { backgroundColor: item.bg }]} />
             <Text style={hm.legendText}>{item.label}</Text>
@@ -147,17 +147,18 @@ const hm = StyleSheet.create({
 
 type Tab = 'jours' | 'mois' | 'annees';
 
-function TabSelector({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
+function TabSelector({ active, onChange }: { active: Tab; onChange: (tab: Tab) => void }) {
+  const { t } = useLocale();
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'jours', label: 'Jours' },
-    { id: 'mois', label: 'Mois' },
-    { id: 'annees', label: 'Années' },
+    { id: 'jours', label: t.history.tabDays },
+    { id: 'mois', label: t.history.tabMonths },
+    { id: 'annees', label: t.history.tabYears },
   ];
   return (
     <View style={ts.wrap}>
-      {tabs.map(t => (
-        <TouchableOpacity key={t.id} style={[ts.btn, active === t.id && ts.btnActive]} onPress={() => onChange(t.id)} activeOpacity={0.75}>
-          <Text style={[ts.label, active === t.id && ts.labelActive]}>{t.label}</Text>
+      {tabs.map(tab => (
+        <TouchableOpacity key={tab.id} style={[ts.btn, active === tab.id && ts.btnActive]} onPress={() => onChange(tab.id)} activeOpacity={0.75}>
+          <Text style={[ts.label, active === tab.id && ts.labelActive]}>{tab.label}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -182,6 +183,7 @@ const ts = StyleSheet.create({
 // ── Vue Jours ─────────────────────────────────────────────────────────────────
 
 function JoursView({ dailyGoal }: { dailyGoal: number }) {
+  const { t, localeTag } = useLocale();
   const { monthHistory, isLoading } = useHealthData();
 
   const now = new Date();
@@ -202,9 +204,9 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
     <>
       <View style={styles.pills}>
         {[
-          { label: `Jours ≥ ${fmtK(dailyGoal)}`, val: `${daysAbove}/${today}` },
-          { label: 'Moyenne', val: fmtK(avgSteps) },
-          { label: 'Total', val: fmtK(totalSteps) },
+          { label: t.history.daysAboveGoal(fmtK(dailyGoal, localeTag)), val: `${daysAbove}/${today}` },
+          { label: t.common.average, val: fmtK(avgSteps, localeTag) },
+          { label: t.common.total, val: fmtK(totalSteps, localeTag) },
         ].map(item => (
           <View key={item.label} style={styles.pill}>
             <Text style={styles.pillVal}>{item.val}</Text>
@@ -214,7 +216,7 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>PAS PAR JOUR</Text>
+        <Text style={styles.cardTitle}>{t.history.stepsPerDay}</Text>
         <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <BarChart
             bars={historyByDay.map(d => ({ value: d.steps, highlight: d.day === today }))}
@@ -227,7 +229,7 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>CALENDRIER DU MOIS</Text>
+        <Text style={styles.cardTitle}>{t.history.monthCalendar}</Text>
         <CalendarHeatmap history={monthHistory} goal={dailyGoal} />
       </View>
     </>
@@ -237,6 +239,8 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
 // ── Vue Mois ──────────────────────────────────────────────────────────────────
 
 function MoisView({ dailyGoal }: { dailyGoal: number }) {
+  const { t, localeTag } = useLocale();
+  const MONTH_NAMES_SHORT = t.history.monthNamesShort;
   const { monthlyTotals, isLoading } = useHealthHistory();
 
   const now = new Date();
@@ -255,9 +259,9 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
     <>
       <View style={styles.pills}>
         {[
-          { label: 'Mois ≥ objectif', val: `${monthsAbove}/${monthlyTotals.length}` },
-          { label: 'Meilleur', val: bestMonth.month >= 0 ? MONTH_NAMES_SHORT[bestMonth.month] : '—' },
-          { label: 'Total', val: fmtK(totalSteps) },
+          { label: t.history.monthsAboveGoal, val: `${monthsAbove}/${monthlyTotals.length}` },
+          { label: t.history.best, val: bestMonth.month >= 0 ? MONTH_NAMES_SHORT[bestMonth.month] : '—' },
+          { label: t.common.total, val: fmtK(totalSteps, localeTag) },
         ].map(item => (
           <View key={item.label} style={styles.pill}>
             <Text style={styles.pillVal}>{item.val}</Text>
@@ -267,7 +271,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>PAS PAR MOIS — {now.getFullYear()}</Text>
+        <Text style={styles.cardTitle}>{t.history.stepsPerMonth(now.getFullYear())}</Text>
         <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <BarChart
             bars={monthlyTotals.map(m => {
@@ -290,7 +294,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>DÉTAIL PAR MOIS</Text>
+        <Text style={styles.cardTitle}>{t.history.monthDetail}</Text>
         {monthlyTotals.map(m => {
           const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
           const monthGoal = dailyGoal * daysInMonth;
@@ -305,7 +309,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
                 <View style={[styles.monthBarFill, { width: `${Math.round(ratio * 100)}%` as `${number}%`, backgroundColor: ratio >= 1 ? ACCENT : `${ACCENT}70` }]} />
               </View>
               <Text style={[styles.monthRowVal, isCurrentMonth && { color: ACCENT }]}>
-                {fmtK(m.steps)}
+                {fmtK(m.steps, localeTag)}
               </Text>
             </View>
           );
@@ -318,6 +322,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
 // ── Vue Années ────────────────────────────────────────────────────────────────
 
 function AnneesView({ dailyGoal }: { dailyGoal: number }) {
+  const { t, localeTag } = useLocale();
   const { yearlyTotals, isLoading } = useHealthHistory();
 
   const now = new Date();
@@ -332,9 +337,9 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
     <>
       <View style={styles.pills}>
         {[
-          { label: 'Meilleure année', val: String(bestYear.year) },
-          { label: 'Objectif/an', val: fmtK(yearGoal) },
-          { label: 'Total', val: fmtK(totalSteps) },
+          { label: t.history.bestYear, val: String(bestYear.year) },
+          { label: t.history.goalPerYear, val: fmtK(yearGoal, localeTag) },
+          { label: t.common.total, val: fmtK(totalSteps, localeTag) },
         ].map(item => (
           <View key={item.label} style={styles.pill}>
             <Text style={styles.pillVal}>{item.val}</Text>
@@ -344,7 +349,7 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>PAS PAR ANNÉE</Text>
+        <Text style={styles.cardTitle}>{t.history.stepsPerYear}</Text>
         <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <BarChart
             bars={yearlyTotals.map(y => ({ value: y.steps, highlight: y.year === currentYear }))}
@@ -355,7 +360,7 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>DÉTAIL PAR ANNÉE</Text>
+        <Text style={styles.cardTitle}>{t.history.yearDetail}</Text>
         {yearlyTotals.map(y => {
           const ratio = yearGoal > 0 ? Math.min(1, y.steps / yearGoal) : 0;
           const isCurrent = y.year === currentYear;
@@ -365,7 +370,7 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
               <View style={styles.monthBarTrack}>
                 <View style={[styles.monthBarFill, { width: `${Math.round(ratio * 100)}%` as `${number}%`, backgroundColor: ratio >= 1 ? ACCENT : `${ACCENT}70` }]} />
               </View>
-              <Text style={[styles.monthRowVal, isCurrent && { color: ACCENT }]}>{fmtK(y.steps)}</Text>
+              <Text style={[styles.monthRowVal, isCurrent && { color: ACCENT }]}>{fmtK(y.steps, localeTag)}</Text>
             </View>
           );
         })}
@@ -387,11 +392,12 @@ function Loader() {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function HistoryScreen() {
+  const { t, localeTag } = useLocale();
   const [activeTab, setActiveTab] = useState<Tab>('jours');
   const { dailyGoal } = useStepGoal();
 
   const now = new Date();
-  const monthName = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const monthName = now.toLocaleDateString(localeTag, { month: 'long', year: 'numeric' });
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -399,7 +405,7 @@ export default function HistoryScreen() {
 
       <View style={styles.header}>
         <Text style={styles.headerMonth}>{monthName}</Text>
-        <Text style={styles.headerTitle}>Historique</Text>
+        <Text style={styles.headerTitle}>{t.tabs.historyTitle}</Text>
       </View>
 
       <TabSelector active={activeTab} onChange={setActiveTab} />

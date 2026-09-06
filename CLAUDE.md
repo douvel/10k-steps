@@ -4,7 +4,7 @@
 
 ### Formatage des pas
 - Les pas ne doivent **jamais** afficher de décimales (pas de `9321.13`, uniquement `9321` ou `9.3k`).
-- Utiliser `Math.round()` avant tout `toLocaleString('fr-FR')`.
+- Utiliser `Math.round()` avant tout `toLocaleString(localeTag)`.
 - La fonction `fmtK` (définie dans chaque écran) gère l'affichage : `>= 1000` → format `k` (ex. `9.3k`), sinon entier localisé.
 
 ### Jours restants dans le mois
@@ -13,8 +13,13 @@
 - Toggle "exclure aujourd'hui" disponible sur la carte : utilise `daysRemaining - 1`.
 - Le toggle est **masqué le dernier jour du mois** (`daysRemaining === 1`), car exclure aujourd'hui ne laisserait aucun jour.
 
-### Locale
-- Tous les nombres sont formatés en `fr-FR`.
+### Locale et traductions (`i18n/`)
+- Anglais par défaut ; passe en français si la langue de l'appareil (`expo-localization`) est `fr`. Voir `i18n/index.ts` (résolution de la locale) et `i18n/locales/{en,fr}.ts` (textes).
+- Pour ajouter une langue : créer `i18n/locales/<code>.ts` (même forme que `en.ts`, typé via `Translations`), puis l'ajouter à `translations` dans `i18n/index.ts`.
+- Tous les textes UI passent par `t.<namespace>.<clé>` (import `{ t, localeTag } from '../../i18n'`) — ne jamais hardcoder de chaîne visible à l'écran.
+- Tous les nombres/dates sont formatés via `localeTag` (ex. `toLocaleString(localeTag)`, `toLocaleDateString(localeTag, ...)`), jamais `'fr-FR'` en dur.
+- `expo-localization` nécessite un rebuild natif (`pod install` + rebuild Xcode) après installation — un `patch-package` (`patches/expo-localization+16.0.1.patch`) corrige un `switch` Swift non exhaustif dans le module sur les toolchains iOS récents (26.x) ; `npm install` l'applique automatiquement via `postinstall`.
+- Les descriptions HealthKit (`NSHealthShareUsageDescription`/`NSHealthUpdateUsageDescription`) sont en anglais dans `app.json` (langue par défaut) ; elles ne suivent pas automatiquement la langue de l'app côté iOS natif (nécessiterait des `.lproj`/`InfoPlist.strings`, non mis en place).
 
 ## Architecture UI (Dashboard)
 

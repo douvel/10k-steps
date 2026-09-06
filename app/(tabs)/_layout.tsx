@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import Svg, { Circle, Rect, Path, Polyline } from 'react-native-svg';
+import { useLocale } from '../../i18n';
 
 const ACCENT = '#FF5C2E';
 const INACTIVE = 'rgba(255,255,255,0.3)';
@@ -37,6 +38,7 @@ function SettingsIcon({ focused }: { focused: boolean }) {
 }
 
 export default function TabsLayout() {
+  const { t } = useLocale();
   return (
     <Tabs
       screenOptions={{
@@ -61,24 +63,24 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tableau de bord',
-          tabBarLabel: 'Tableau',
+          title: t.tabs.dashboardTitle,
+          tabBarLabel: t.tabs.dashboardLabel,
           tabBarIcon: ({ focused }) => <DashboardIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: 'Historique',
-          tabBarLabel: 'Historique',
+          title: t.tabs.historyTitle,
+          tabBarLabel: t.tabs.historyLabel,
           tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Paramètres',
-          tabBarLabel: 'Paramètres',
+          title: t.tabs.settingsTitle,
+          tabBarLabel: t.tabs.settingsLabel,
           tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} />,
         }}
       />
