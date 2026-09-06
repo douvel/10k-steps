@@ -5,7 +5,7 @@
 ### Formatage des pas
 - Les pas ne doivent **jamais** afficher de décimales (pas de `9321.13`, uniquement `9321` ou `9.3k`).
 - Utiliser `Math.round()` avant tout `toLocaleString(localeTag)`.
-- La fonction `fmtK` (définie dans chaque écran) gère l'affichage : `>= 1000` → format `k` (ex. `9.3k`), sinon entier localisé.
+- La fonction `fmtK` (`utils/format.ts`, partagée par tous les écrans — ne pas la redéfinir localement) gère l'affichage : `>= 1_000_000` → format `M` (ex. `3.1M`), `>= 1000` → format `k` (ex. `9.3k`), sinon entier localisé.
 
 ### Jours restants dans le mois
 - `daysRemaining` **inclut aujourd'hui** : `daysInMonth - dayOfMonth + 1`.
@@ -30,7 +30,7 @@
 - Couleur dynamique via `getPaceState` (voir ci-dessous).
 
 ### Système de couleurs / états (`getPaceState`)
-Calcule couleur + emoji + label en fonction de `(dailyAverage - dailyGoal) / dailyGoal` :
+Définie dans `utils/pace.ts` (testée dans `utils/__tests__/pace.test.ts`), importée par `index.tsx`. Calcule couleur + emoji + label en fonction de `(dailyAverage - dailyGoal) / dailyGoal` :
 
 | Ratio | Couleur | Emoji | Label |
 |---|---|---|---|
@@ -51,5 +51,24 @@ Calcule couleur + emoji + label en fonction de `(dailyAverage - dailyGoal) / dai
 - Toggle Switch (sans texte) en bas à droite du sous-titre pour exclure aujourd'hui.
 - Le sous-titre change : "sur X jours (incluant aujourd'hui)" ↔ "sur X jours (à partir de demain)".
 
+## Données santé (HealthKit / Health Connect)
+
+### Fetch partagé (`contexts/HealthDataContext.tsx`)
+- `useHealthData()` et `useHealthHistory()` (dans `hooks/`) ne doivent **jamais** être appelés directement depuis un écran — toujours passer par `useSharedHealthData()` / `useSharedHealthHistory()` (`contexts/HealthDataContext.tsx`).
+- `HealthDataProvider` est monté une seule fois dans `app/(tabs)/_layout.tsx` et fait le fetch une seule fois pour toute la session ; sans ça, changer d'onglet (Dashboard ↔ Historique ↔ sous-onglets Jours/Mois/Années) redéclenche un fetch HealthKit complet à chaque montage.
+- Le provider écoute aussi `AppState` : au retour au premier plan (background → active), il relance `refresh()` sur les deux hooks pour ne pas afficher des données figées.
+
+### Erreurs typées (`HealthErrorKind`)
+Les deux hooks classifient toute erreur de fetch en trois catégories (voir le type `HealthErrorKind` dans `hooks/useHealthData.ts`/`useHealthHistory.ts`) :
+- `'unavailable'` — module natif absent (Expo Go) ou timeout simulateur : **seul** ce cas affiche des données factices (`isMockData: true`), utile en dev.
+- `'permission-denied'` — accès santé explicitement refusé (détectable seulement sur Android/Health Connect ; iOS ne renseigne jamais l'état de permission par design HealthKit).
+- `'unknown'` — vraie erreur inattendue sur un appareil réel.
+- Pour `'permission-denied'` et `'unknown'`, ne **jamais** fabriquer de pas : l'état retourné est honnête (zéros + `error`/`errorKind`). Seul `'unavailable'` mock des données.
+- La bannière du Dashboard (`index.tsx`) distingue les trois textes (`mockBannerText` / `permissionDeniedBannerText` / `errorBannerText` dans `i18n/`).
+
 ## Bug connu — Lag HealthKit après minuit
 `getDailyStepCountSamples` peut mettre plusieurs heures à finaliser les données du jour qui vient de se terminer. Fix dans `useHealthData.ts` : on appelle aussi `getStepCount` sur **hier** (endpoint temps réel) et on patche `monthHistory` si la valeur historique est inférieure à la valeur live.
+
+## Tests
+- Jest (`jest-expo`) est configuré (`npm test`), mais uniquement pour les fonctions **pures** extraites dans `utils/` (`format.ts`, `pace.ts`, `monthProgress.ts`) — pas de rendu de composants pour l'instant.
+- Toute nouvelle logique de calcul (dates, pas, moyennes, états) doit être écrite comme fonction pure dans `utils/` plutôt qu'inline dans un écran, pour rester testable. Voir `utils/__tests__/` pour les exemples et les cas limites déjà couverts (arrondis autour du seuil `k`, `daysRemaining` le dernier jour du mois, etc.).

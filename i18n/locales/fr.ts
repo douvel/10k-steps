@@ -24,6 +24,8 @@ const fr: Translations = {
     stepsToday: "PAS AUJOURD'HUI",
     monthlyProgressTitle: 'PROGRESSION DU MOIS',
     mockBannerText: 'Données simulées — accès Santé requis',
+    permissionDeniedBannerText: 'Accès Santé refusé — aucune donnée affichée',
+    errorBannerText: 'Impossible de lire les données Santé',
     openHealthSettings: 'Ouvrir Réglages Santé',
     totalMonth: 'TOTAL DU MOIS',
     stepsThisMonth: 'pas ce mois-ci',
@@ -38,6 +40,7 @@ const fr: Translations = {
     paceBehindTotal: (n) => `${n} pas de retard`,
     paceAheadPerDay: (n) => `+${n} pas/j d'avance`,
     paceAheadTotal: (n) => `+${n} pas d'avance`,
+    excludeTodayA11yLabel: "Exclure aujourd'hui de la moyenne requise",
   },
 
   history: {

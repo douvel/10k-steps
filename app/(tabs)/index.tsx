@@ -5,40 +5,17 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline } from 'react-native-svg';
-import { useHealthData } from '../../hooks/useHealthData';
+import { useSharedHealthData } from '../../contexts/HealthDataContext';
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useState } from 'react';
 import { useLocale } from '../../i18n';
-import type { Translations } from '../../i18n/locales/en';
+import { fmtK } from '../../utils/format';
+import { getPaceState, PaceState } from '../../utils/pace';
+import { computeMonthlyTotal, computeMonthProgress } from '../../utils/monthProgress';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
-
-function fmtK(n: number, localeTag: string): string {
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-  return Math.round(n).toLocaleString(localeTag);
-}
-
-// ── Pace state ────────────────────────────────────────────────────────────────
-
-type PaceState = { color: string; emoji: string; label: string; totalLabel: string };
-
-function getPaceState(t: Translations, localeTag: string, diff: number, goal: number, cumulativeDelta: number, monthDone: boolean): PaceState {
-  const absDiff = Math.round(Math.abs(diff)).toLocaleString(localeTag);
-  const plusDiff = Math.round(diff).toLocaleString(localeTag);
-  const absTotal = Math.round(Math.abs(cumulativeDelta)).toLocaleString(localeTag);
-  const plusTotal = Math.round(cumulativeDelta).toLocaleString(localeTag);
-  if (monthDone)        return { color: '#F59E0B', emoji: '👏', label: t.dashboard.paceGoalReached, totalLabel: t.dashboard.paceGoalReached };
-  const ratio = diff / goal;
-  if (ratio < -0.10)   return { color: '#DC2626', emoji: '😰', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
-  if (ratio < -0.04)   return { color: '#EF4444', emoji: '😥', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
-  if (ratio < -0.01)   return { color: '#3B82F6', emoji: '😯', label: t.dashboard.paceBehindPerDay(absDiff), totalLabel: t.dashboard.paceBehindTotal(absTotal) };
-  if (ratio <=  0.01)  return { color: '#3B82F6', emoji: '🫡', label: t.dashboard.paceOnTrack, totalLabel: t.dashboard.paceOnTrack };
-  if (ratio <=  0.04)  return { color: '#3B82F6', emoji: '👍', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
-  if (ratio <=  0.10)  return { color: '#4ADE80', emoji: '💪', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
-  return                      { color: '#16A34A', emoji: '🤩', label: t.dashboard.paceAheadPerDay(plusDiff), totalLabel: t.dashboard.paceAheadTotal(plusTotal) };
-}
 
 // ── XP Hero ───────────────────────────────────────────────────────────────────
 
@@ -51,7 +28,7 @@ function XPHero({ progress, steps, goal }: { progress: number; steps: number; go
       {/* Step count */}
       <View style={styles.xpCountRow}>
         <Text style={[styles.xpSteps, over && { color: ACCENT }]}>
-          {Math.floor(steps).toLocaleString(localeTag)}
+          {Math.round(steps).toLocaleString(localeTag)}
         </Text>
         <Text style={styles.xpGoal}>/{goal >= 1000 ? `${(goal/1000).toFixed(0)}k` : goal}</Text>
       </View>
@@ -65,8 +42,15 @@ function XPHero({ progress, steps, goal }: { progress: number; steps: number; go
 function MetricCard({ label, value, sub, glowing, topRight }: {
   label: string; value: string; sub?: string; glowing?: boolean; topRight?: React.ReactNode;
 }) {
+  // Only merge into one VoiceOver-readable element when there's no interactive control (topRight,
+  // e.g. the exclude-today Switch) inside — grouping would otherwise swallow that control.
+  const groupedA11yProps = topRight ? {} : {
+    accessible: true,
+    accessibilityRole: 'text' as const,
+    accessibilityLabel: sub ? `${label}: ${value}, ${sub}` : `${label}: ${value}`,
+  };
   return (
-    <View style={[styles.card, glowing && styles.cardGlowing]}>
+    <View style={[styles.card, glowing && styles.cardGlowing]} {...groupedA11yProps}>
       <Text style={styles.cardLabel}>{label}</Text>
       <Text style={[styles.cardValue, glowing && styles.cardValueGlowing]}>{value}</Text>
       {(sub || topRight) ? (
@@ -107,7 +91,7 @@ function MonthlyProgressBar({ total, goal, dayOfMonth, daysInMonth, state }: {
           <View style={[styles.monthBarTick, { left: `${idealPct * 100}%` as any }]} />
         </View>
         <View style={styles.monthBarHints}>
-          <TouchableOpacity onPress={() => setShowPerDay(s => !s)} activeOpacity={0.7}>
+          <TouchableOpacity onPress={() => setShowPerDay(s => !s)} activeOpacity={0.7} accessibilityRole="button">
             <Text style={[styles.monthBarHintRight, { color }]}>{emoji}  {showPerDay ? label : totalLabel}</Text>
           </TouchableOpacity>
         </View>
@@ -133,31 +117,18 @@ function PaceBadge({ state }: { state: PaceState }) {
 export default function DashboardScreen() {
   const { top } = useSafeAreaInsets();
   const { t, localeTag } = useLocale();
-  const { todaySteps, monthHistory, isMockData, isLoading, error, refresh } = useHealthData();
+  const { todaySteps, monthHistory, isMockData, isLoading, error, errorKind, refresh } = useSharedHealthData();
   const { dailyGoal } = useStepGoal();
   const [excludeToday, setExcludeToday] = useState(false);
 
   const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const dayOfMonth = now.getDate();
-  const daysElapsed = Math.max(1, dayOfMonth);
-  const daysRemaining = Math.max(1, daysInMonth - dayOfMonth + 1);
+  const monthlyTotal = computeMonthlyTotal(monthHistory, todaySteps, now);
+  const {
+    daysInMonth, dayOfMonth, daysElapsed, daysRemaining, monthlyGoal,
+    dailyAverage, remainingSteps, daysForAverage, requiredDailyAverage,
+    monthDone, cumulativeDelta,
+  } = computeMonthProgress(now, dailyGoal, monthlyTotal, excludeToday);
 
-  const monthlyGoal = dailyGoal * daysInMonth;
-  // Use local date — toISOString() is UTC and shifts dates near midnight in UTC+N zones
-  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  // Always use live todaySteps — getDailyStepCountSamples can lag or omit today entirely
-  const historicalTotal = monthHistory
-    .filter(d => d.date !== todayKey)
-    .reduce((sum, d) => sum + d.steps, 0);
-  const monthlyTotal = historicalTotal + todaySteps;
-  const dailyAverage = Math.round(monthlyTotal / daysElapsed);
-  const remainingSteps = Math.max(0, monthlyGoal - monthlyTotal);
-  const daysForAverage = excludeToday ? Math.max(1, daysRemaining - 1) : daysRemaining;
-  const requiredDailyAverage = Math.round(remainingSteps / daysForAverage);
-
-  const monthDone = monthlyTotal >= monthlyGoal;
-  const cumulativeDelta = monthlyTotal - dailyGoal * daysElapsed;
   const paceState = getPaceState(t, localeTag, dailyAverage - dailyGoal, dailyGoal, cumulativeDelta, monthDone);
 
   const goalReached = todaySteps >= dailyGoal;
@@ -179,15 +150,23 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingTop: top }]}>
       <StatusBar style="light" />
 
-      {/* Mock data banner */}
-      {isMockData && (
+      {/* Mock data / permission / error banner */}
+      {(isMockData || errorKind) && (
         <View style={styles.mockBanner}>
-          <Text style={styles.mockBannerText}>{t.dashboard.mockBannerText}</Text>
+          <Text style={styles.mockBannerText}>
+            {isMockData
+              ? t.dashboard.mockBannerText
+              : errorKind === 'permission-denied'
+                ? t.dashboard.permissionDeniedBannerText
+                : t.dashboard.errorBannerText}
+          </Text>
           {error ? <Text style={styles.mockBannerError} selectable>{error}</Text> : null}
-          <TouchableOpacity style={styles.mockBannerButton} onPress={() => Linking.openURL('x-apple-health://').catch(() => Linking.openSettings())}>
-            <Text style={styles.mockBannerButtonText}>{t.dashboard.openHealthSettings}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={refresh}>
+          {(isMockData || errorKind === 'permission-denied') && (
+            <TouchableOpacity style={styles.mockBannerButton} onPress={() => Linking.openURL('x-apple-health://').catch(() => Linking.openSettings())} accessibilityRole="button">
+              <Text style={styles.mockBannerButtonText}>{t.dashboard.openHealthSettings}</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={refresh} accessibilityRole="button">
             <Text style={styles.mockBannerRetry}>{t.common.retry}</Text>
           </TouchableOpacity>
         </View>
@@ -238,6 +217,7 @@ export default function DashboardScreen() {
                 thumbColor={excludeToday ? ACCENT : 'rgba(255,255,255,0.4)'}
                 ios_backgroundColor="rgba(255,255,255,0.1)"
                 style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+                accessibilityLabel={t.dashboard.excludeTodayA11yLabel}
               />
             ) : undefined}
           />
@@ -245,7 +225,7 @@ export default function DashboardScreen() {
       </View>
 
       {/* Refresh */}
-      <TouchableOpacity style={styles.refreshBtn} onPress={refresh} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.refreshBtn} onPress={refresh} activeOpacity={0.8} accessibilityRole="button">
         <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
           <Polyline points="23 4 23 10 17 10" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />
           <Polyline points="1 20 1 14 7 14" stroke="#000" strokeWidth="2.5" strokeLinecap="round" />

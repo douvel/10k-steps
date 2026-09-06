@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import Svg, { Circle, Rect, Path, Polyline } from 'react-native-svg';
 import { useLocale } from '../../i18n';
+import { HealthDataProvider } from '../../contexts/HealthDataContext';
 
 const ACCENT = '#FF5C2E';
 const INACTIVE = 'rgba(255,255,255,0.3)';
@@ -40,50 +41,52 @@ function SettingsIcon({ focused }: { focused: boolean }) {
 export default function TabsLayout() {
   const { t } = useLocale();
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: 'rgba(10,10,15,0.97)',
-          borderTopColor: 'rgba(255,255,255,0.07)',
-          borderTopWidth: 1,
-          height: 80,
-          paddingBottom: 16,
-          paddingTop: 8,
-        },
-        tabBarActiveTintColor: ACCENT,
-        tabBarInactiveTintColor: INACTIVE,
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          letterSpacing: 0.3,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t.tabs.dashboardTitle,
-          tabBarLabel: t.tabs.dashboardLabel,
-          tabBarIcon: ({ focused }) => <DashboardIcon focused={focused} />,
+    <HealthDataProvider>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: 'rgba(10,10,15,0.97)',
+            borderTopColor: 'rgba(255,255,255,0.07)',
+            borderTopWidth: 1,
+            height: 80,
+            paddingBottom: 16,
+            paddingTop: 8,
+          },
+          tabBarActiveTintColor: ACCENT,
+          tabBarInactiveTintColor: INACTIVE,
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '600',
+            letterSpacing: 0.3,
+          },
         }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: t.tabs.historyTitle,
-          tabBarLabel: t.tabs.historyLabel,
-          tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: t.tabs.settingsTitle,
-          tabBarLabel: t.tabs.settingsLabel,
-          tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: t.tabs.dashboardTitle,
+            tabBarLabel: t.tabs.dashboardLabel,
+            tabBarIcon: ({ focused }) => <DashboardIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: t.tabs.historyTitle,
+            tabBarLabel: t.tabs.historyLabel,
+            tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: t.tabs.settingsTitle,
+            tabBarLabel: t.tabs.settingsLabel,
+            tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} />,
+          }}
+        />
+      </Tabs>
+    </HealthDataProvider>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { HEALTHKIT_PERMISSIONS, HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import type AppleHealthKitModule from 'react-native-health';
+import type { HealthKitPermissions } from 'react-native-health';
 
 export interface MonthTotal {
   year: number;
@@ -13,18 +15,27 @@ export interface YearTotal {
   steps: number;
 }
 
+// See useHealthData.ts's HealthErrorKind for what each case means.
+export type HealthErrorKind = 'unavailable' | 'permission-denied' | 'unknown';
+
+class HealthDataError extends Error {
+  kind: HealthErrorKind;
+  constructor(message: string, kind: HealthErrorKind) {
+    super(message);
+    this.kind = kind;
+  }
+}
+
 export interface HealthHistoryState {
   monthlyTotals: MonthTotal[]; // months of current year up to today
   yearlyTotals: YearTotal[];   // last N years
   isLoading: boolean;
   error: string | null;
+  errorKind: HealthErrorKind | null;
+  isMockData: boolean;
 }
 
 const YEARS_BACK = 4;
-
-function toDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
 
 function buildMockMonthly(now: Date): MonthTotal[] {
   const seed = [210000, 185000, 230000, 195000, 220000, 200000, 175000, 215000, 240000, 180000, 205000, 195000];
@@ -47,26 +58,30 @@ function buildMockYearly(now: Date): YearTotal[] {
 // ── iOS — HealthKit ───────────────────────────────────────────────────────────
 
 async function fetchIOSHistory(): Promise<Pick<HealthHistoryState, 'monthlyTotals' | 'yearlyTotals'>> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let AppleHealthKit: any;
+  let AppleHealthKit: typeof AppleHealthKitModule | undefined;
   try {
     const rnHealth = require('react-native-health');
-    AppleHealthKit = rnHealth?.default ?? rnHealth;
+    AppleHealthKit = (rnHealth?.default ?? rnHealth) as typeof AppleHealthKitModule;
   } catch (e) {
-    throw new Error('HealthKit module load failed: ' + String(e));
+    throw new HealthDataError('HealthKit module load failed: ' + String(e), 'unavailable');
   }
 
   if (!AppleHealthKit || typeof AppleHealthKit.initHealthKit !== 'function') {
-    throw new Error('HealthKit: initHealthKit not found');
+    throw new HealthDataError('HealthKit: initHealthKit not found', 'unavailable');
   }
 
   await new Promise<void>((resolve, reject) => {
-    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS, (err: string | null) => {
+    const timer = setTimeout(
+      () => reject(new HealthDataError('HealthKit init timed out', 'unavailable')),
+      5000,
+    );
+    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS as unknown as HealthKitPermissions, (err) => {
+      clearTimeout(timer);
       const realError =
         err &&
         err !== 'null' &&
         !(typeof err === 'object' && Object.keys(err as object).length === 0);
-      if (realError) reject(new Error('HealthKit init: ' + JSON.stringify(err)));
+      if (realError) reject(new HealthDataError('HealthKit init: ' + JSON.stringify(err), 'unknown'));
       else resolve();
     });
   });
@@ -78,8 +93,8 @@ async function fetchIOSHistory(): Promise<Pick<HealthHistoryState, 'monthlyTotal
   const rawSamples = await new Promise<Array<{ startDate: string; value: number }>>((resolve, reject) => {
     AppleHealthKit.getDailyStepCountSamples(
       { startDate: rangeStart.toISOString(), endDate: now.toISOString() },
-      (err: unknown, results: Array<{ startDate: string; value: number }>) => {
-        if (err) { reject(err); return; }
+      (err, results) => {
+        if (err) { reject(new HealthDataError('getDailyStepCountSamples: ' + JSON.stringify(err), 'unknown')); return; }
         resolve(results ?? []);
       },
     );
@@ -118,15 +133,15 @@ async function fetchAndroidHistory(): Promise<Pick<HealthHistoryState, 'monthlyT
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     HealthConnect = require('react-native-health-connect');
   } catch {
-    throw new Error('Health Connect module unavailable');
+    throw new HealthDataError('Health Connect module unavailable', 'unavailable');
   }
 
   const { initialize, requestPermission, readRecords } = HealthConnect;
   const available = await initialize();
-  if (!available) throw new Error('Health Connect not available');
+  if (!available) throw new HealthDataError('Health Connect not available', 'unavailable');
 
   const granted = await requestPermission([{ accessType: 'read', recordType: HEALTH_CONNECT_STEPS_RECORD }]);
-  if (!granted.length) throw new Error('Health Connect permission denied');
+  if (!granted.length) throw new HealthDataError('Health Connect permission denied', 'permission-denied');
 
   const now = new Date();
   const startYear = now.getFullYear() - YEARS_BACK + 1;
@@ -171,26 +186,46 @@ export function useHealthHistory() {
     yearlyTotals: [],
     isLoading: true,
     error: null,
+    errorKind: null,
+    isMockData: false,
   });
 
   const load = useCallback(async () => {
-    setState(s => ({ ...s, isLoading: true, error: null }));
+    setState(s => ({ ...s, isLoading: true, error: null, errorKind: null }));
     try {
-      const now = new Date();
       let data: Pick<HealthHistoryState, 'monthlyTotals' | 'yearlyTotals'>;
       if (Platform.OS === 'ios') {
         data = await fetchIOSHistory();
       } else {
         data = await fetchAndroidHistory();
       }
-      setState({ ...data, isLoading: false, error: null });
+      setState({ ...data, isLoading: false, error: null, errorKind: null, isMockData: false });
     } catch (err) {
-      const now = new Date();
+      const message = err instanceof Error ? err.message : String(err);
+      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
+
+      if (kind === 'unavailable') {
+        // Dev-time stand-in only: no native module/device to read real steps from.
+        const now = new Date();
+        setState({
+          monthlyTotals: buildMockMonthly(now),
+          yearlyTotals: buildMockYearly(now),
+          isLoading: false,
+          error: message,
+          errorKind: kind,
+          isMockData: true,
+        });
+        return;
+      }
+
+      // Permission denied or a genuine unexpected error — never fabricate steps for these.
       setState({
-        monthlyTotals: buildMockMonthly(now),
-        yearlyTotals: buildMockYearly(now),
+        monthlyTotals: [],
+        yearlyTotals: [],
         isLoading: false,
-        error: err instanceof Error ? err.message : String(err),
+        error: message,
+        errorKind: kind,
+        isMockData: false,
       });
     }
   }, []);

@@ -2,20 +2,14 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
-import { useHealthData } from '../../hooks/useHealthData';
-import { useHealthHistory } from '../../hooks/useHealthHistory';
+import { useSharedHealthData, useSharedHealthHistory } from '../../contexts/HealthDataContext';
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useLocale } from '../../i18n';
+import { fmtK } from '../../utils/format';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
 const CARD_BG = '#1A1A22';
-
-function fmtK(n: number, localeTag: string): string {
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 10000) return `${(n / 1000).toFixed(1)}k`;
-  return Math.round(n).toLocaleString(localeTag);
-}
 
 // ── Generic bar chart ─────────────────────────────────────────────────────────
 
@@ -157,7 +151,14 @@ function TabSelector({ active, onChange }: { active: Tab; onChange: (tab: Tab) =
   return (
     <View style={ts.wrap}>
       {tabs.map(tab => (
-        <TouchableOpacity key={tab.id} style={[ts.btn, active === tab.id && ts.btnActive]} onPress={() => onChange(tab.id)} activeOpacity={0.75}>
+        <TouchableOpacity
+          key={tab.id}
+          style={[ts.btn, active === tab.id && ts.btnActive]}
+          onPress={() => onChange(tab.id)}
+          activeOpacity={0.75}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: active === tab.id }}
+        >
           <Text style={[ts.label, active === tab.id && ts.labelActive]}>{tab.label}</Text>
         </TouchableOpacity>
       ))}
@@ -184,7 +185,7 @@ const ts = StyleSheet.create({
 
 function JoursView({ dailyGoal }: { dailyGoal: number }) {
   const { t, localeTag } = useLocale();
-  const { monthHistory, isLoading } = useHealthData();
+  const { monthHistory, isLoading } = useSharedHealthData();
 
   const now = new Date();
   const today = now.getDate();
@@ -241,7 +242,7 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
 function MoisView({ dailyGoal }: { dailyGoal: number }) {
   const { t, localeTag } = useLocale();
   const MONTH_NAMES_SHORT = t.history.monthNamesShort;
-  const { monthlyTotals, isLoading } = useHealthHistory();
+  const { monthlyTotals, isLoading } = useSharedHealthHistory();
 
   const now = new Date();
   const daysInYear = 365;
@@ -323,7 +324,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
 
 function AnneesView({ dailyGoal }: { dailyGoal: number }) {
   const { t, localeTag } = useLocale();
-  const { yearlyTotals, isLoading } = useHealthHistory();
+  const { yearlyTotals, isLoading } = useSharedHealthHistory();
 
   const now = new Date();
   const currentYear = now.getFullYear();

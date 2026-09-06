@@ -1,10 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { HEALTHKIT_PERMISSIONS, HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
+import type AppleHealthKitModule from 'react-native-health';
+import type { HealthKitPermissions } from 'react-native-health';
 
 export interface DaySteps {
   date: string; // YYYY-MM-DD
   steps: number;
+}
+
+// 'unavailable' — no native module/device to read from (Expo Go, simulator timeout): mock data is a
+//   reasonable dev-time stand-in.
+// 'permission-denied' — the user explicitly declined health data access (only detectable on Android;
+//   iOS never reports permission state, by HealthKit design).
+// 'unknown' — a real, unexpected failure reading from an actual device: never fabricate steps for this.
+export type HealthErrorKind = 'unavailable' | 'permission-denied' | 'unknown';
+
+class HealthDataError extends Error {
+  kind: HealthErrorKind;
+  constructor(message: string, kind: HealthErrorKind) {
+    super(message);
+    this.kind = kind;
+  }
 }
 
 export interface HealthState {
@@ -14,6 +31,7 @@ export interface HealthState {
   isMockData: boolean;
   isLoading: boolean;
   error: string | null;
+  errorKind: HealthErrorKind | null;
 }
 
 // ── Mock data used when permissions are denied or API is unavailable ──────────
@@ -53,36 +71,39 @@ function startOfDay(date: Date): Date {
 async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistory' | 'hasPermission'>> {
   // react-native-health is a native module and is unavailable in Expo Go.
   // The try/catch below catches "NativeModule not available" gracefully.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let AppleHealthKit: any;
+  let AppleHealthKit: typeof AppleHealthKitModule | undefined;
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const rnHealth = require('react-native-health');
     // Handle both CommonJS (module.exports) and ES module (.default) exports
-    AppleHealthKit = rnHealth?.default ?? rnHealth;
+    AppleHealthKit = (rnHealth?.default ?? rnHealth) as typeof AppleHealthKitModule;
   } catch (e) {
-    throw new Error('HealthKit module load failed: ' + String(e));
+    throw new HealthDataError('HealthKit module load failed: ' + String(e), 'unavailable');
   }
 
   if (!AppleHealthKit || typeof AppleHealthKit.initHealthKit !== 'function') {
-    throw new Error(
+    throw new HealthDataError(
       'HealthKit: initHealthKit not found. Module keys: ' +
-        Object.keys(AppleHealthKit ?? {}).join(', ')
+        Object.keys(AppleHealthKit ?? {}).join(', '),
+      'unavailable',
     );
   }
 
   // Request HealthKit permission for StepCount read access
   // On the iOS Simulator, initHealthKit's callback can silently never fire — guard with a 5s timeout.
   await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('HealthKit init timed out')), 5000);
-    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS, (err: string | null) => {
+    const timer = setTimeout(
+      () => reject(new HealthDataError('HealthKit init timed out', 'unavailable')),
+      5000,
+    );
+    AppleHealthKit.initHealthKit(HEALTHKIT_PERMISSIONS as unknown as HealthKitPermissions, (err) => {
       clearTimeout(timer);
       // Some versions pass err="null" (string) or {} (empty object) on success — treat those as success
       const realError =
         err &&
         err !== 'null' &&
         !(typeof err === 'object' && Object.keys(err as object).length === 0);
-      if (realError) reject(new Error('HealthKit init: ' + JSON.stringify(err)));
+      if (realError) reject(new HealthDataError('HealthKit init: ' + JSON.stringify(err), 'unknown'));
       else resolve();
     });
   });
@@ -102,7 +123,7 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
     AppleHealthKit.getStepCount(
       { date: todayStart.toISOString() },
       (err, result) => {
-        if (err) reject(err);
+        if (err) reject(new HealthDataError('getStepCount: ' + JSON.stringify(err), 'unknown'));
         else resolve(result?.value ?? 0);
       },
     );
@@ -128,7 +149,7 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
         endDate: now.toISOString(),
       },
       (err, results) => {
-        if (err) { reject(err); return; }
+        if (err) { reject(new HealthDataError('getDailyStepCountSamples: ' + JSON.stringify(err), 'unknown')); return; }
         // Use LOCAL date — HealthKit may return UTC midnight after consolidation
         // which would shift dates by 1 in UTC+N timezones near midnight.
         const map = new Map<string, number>();
@@ -162,20 +183,20 @@ async function fetchAndroid(): Promise<Pick<HealthState, 'todaySteps' | 'monthHi
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     HealthConnect = require('react-native-health-connect');
   } catch {
-    throw new Error('Health Connect module unavailable (Expo Go)');
+    throw new HealthDataError('Health Connect module unavailable (Expo Go)', 'unavailable');
   }
 
   const { initialize, requestPermission, readRecords } = HealthConnect;
 
   // Initialize Health Connect SDK (required before any other call)
   const available = await initialize();
-  if (!available) throw new Error('Health Connect not available on this device');
+  if (!available) throw new HealthDataError('Health Connect not available on this device', 'unavailable');
 
   // Request read permission for Steps
   const granted = await requestPermission([
     { accessType: 'read', recordType: HEALTH_CONNECT_STEPS_RECORD },
   ]);
-  if (!granted.length) throw new Error('Health Connect permission denied');
+  if (!granted.length) throw new HealthDataError('Health Connect permission denied', 'permission-denied');
 
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -227,31 +248,50 @@ export function useHealthData() {
     isMockData: false,
     isLoading: true,
     error: null,
+    errorKind: null,
   });
 
   const load = useCallback(async () => {
-    setState((s) => ({ ...s, isLoading: true, error: null }));
+    setState((s) => ({ ...s, isLoading: true, error: null, errorKind: null }));
     try {
       let data: Pick<HealthState, 'todaySteps' | 'monthHistory' | 'hasPermission'>;
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('HealthKit fetch timed out (simulator?)')), 5000)
+        setTimeout(() => reject(new HealthDataError('HealthKit fetch timed out (simulator?)', 'unavailable')), 5000)
       );
       if (Platform.OS === 'ios') {
         data = await Promise.race([fetchIOS(), timeoutPromise]);
       } else {
         data = await fetchAndroid();
       }
-      setState({ ...data, isMockData: false, isLoading: false, error: null });
+      setState({ ...data, isMockData: false, isLoading: false, error: null, errorKind: null });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      const mock = buildMockHistory();
+      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
+
+      if (kind === 'unavailable') {
+        // Dev-time stand-in only: no native module/device to read real steps from.
+        const mock = buildMockHistory();
+        setState({
+          todaySteps: mock[mock.length - 1]?.steps ?? 0,
+          monthHistory: mock,
+          hasPermission: false,
+          isMockData: true,
+          isLoading: false,
+          error: message,
+          errorKind: kind,
+        });
+        return;
+      }
+
+      // Permission denied or a genuine unexpected error — never fabricate steps for these.
       setState({
-        todaySteps: mock[mock.length - 1]?.steps ?? 0,
-        monthHistory: mock,
+        todaySteps: 0,
+        monthHistory: [],
         hasPermission: false,
-        isMockData: true,
+        isMockData: false,
         isLoading: false,
         error: message,
+        errorKind: kind,
       });
     }
   }, []);

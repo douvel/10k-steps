@@ -22,6 +22,8 @@ const en = {
     stepsToday: 'STEPS TODAY',
     monthlyProgressTitle: 'MONTH PROGRESS',
     mockBannerText: 'Simulated data — Health access required',
+    permissionDeniedBannerText: 'Health access denied — showing no data',
+    errorBannerText: 'Could not read Health data',
     openHealthSettings: 'Open Health Settings',
     totalMonth: 'TOTAL THIS MONTH',
     stepsThisMonth: 'steps this month',
@@ -36,6 +38,7 @@ const en = {
     paceBehindTotal: (n: string) => `${n} steps behind`,
     paceAheadPerDay: (n: string) => `+${n} steps/day ahead`,
     paceAheadTotal: (n: string) => `+${n} steps ahead`,
+    excludeTodayA11yLabel: 'Exclude today from the required average',
   },
 
   history: {
