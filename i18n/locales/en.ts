@@ -61,6 +61,7 @@ const en = {
     stepsPerYear: 'STEPS PER YEAR',
     yearDetail: 'DETAIL BY YEAR',
     dayCellA11yLabel: (day: number, steps: string) => `Day ${day}: ${steps} steps`,
+    dayDetailPercentOfGoal: (pct: number) => `${pct}% of goal`,
     dayCellFutureA11yLabel: (day: number) => `Day ${day}, upcoming`,
   },
 

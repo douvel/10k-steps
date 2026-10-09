@@ -63,6 +63,7 @@ const fr: Translations = {
     stepsPerYear: 'PAS PAR ANNÉE',
     yearDetail: 'DÉTAIL PAR ANNÉE',
     dayCellA11yLabel: (day, steps) => `Jour ${day} : ${steps} pas`,
+    dayDetailPercentOfGoal: (pct) => `${pct} % de l'objectif`,
     dayCellFutureA11yLabel: (day) => `Jour ${day}, à venir`,
   },
 

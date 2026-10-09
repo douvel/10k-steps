@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Rect, Line, Text as SvgText } from 'react-native-svg';
@@ -15,9 +15,11 @@ const CARD_BG = '#1A1A22';
 // ── Generic bar chart ─────────────────────────────────────────────────────────
 
 function BarChart({
-  bars, goal, labelFirst, labelMid, labelLast, accessibilityLabel,
+  bars, goal, labelFirst, labelMid, labelLast, accessibilityLabel, selectedIndex, onSelect,
 }: {
   bars: { value: number; highlight?: boolean; label?: string }[];
+  selectedIndex?: number;
+  onSelect?: (index: number) => void;
   goal?: number;
   labelFirst?: string;
   labelMid?: string;
@@ -50,8 +52,16 @@ function BarChart({
         const h = (b.value / maxVal) * chartH;
         const x = i * (barW + 2);
         const y = chartH - h;
-        const fill = b.highlight ? ACCENT : b.value >= (goal ?? Infinity) ? `${ACCENT}60` : 'rgba(255,255,255,0.12)';
-        return <Rect key={i} x={x} y={y} width={barW} height={h} fill={fill} rx={2} />;
+        const fill = i === selectedIndex ? '#fff' : b.highlight ? ACCENT : b.value >= (goal ?? Infinity) ? `${ACCENT}60` : 'rgba(255,255,255,0.12)';
+        return (
+          <React.Fragment key={i}>
+            <Rect x={x} y={y} width={barW} height={h} fill={fill} rx={2} />
+            {/* Full-height transparent hit area: bars can be tiny/short, so taps must be forgiving */}
+            {onSelect && (
+              <Rect x={x - 1} y={0} width={barW + 2} height={chartH} fill="transparent" onPress={() => onSelect(i)} />
+            )}
+          </React.Fragment>
+        );
       })}
 
       {labelFirst !== undefined && (
@@ -69,7 +79,9 @@ function BarChart({
 
 // ── Calendar heatmap ──────────────────────────────────────────────────────────
 
-function CalendarHeatmap({ history, goal }: { history: { date: string; steps: number }[]; goal: number }) {
+function CalendarHeatmap({ history, goal, selectedDay, onSelect }: {
+  history: { date: string; steps: number }[]; goal: number; selectedDay: number; onSelect: (day: number) => void;
+}) {
   const { t, localeTag } = useLocale();
   const now = new Date();
   const today = now.getDate();
@@ -112,15 +124,19 @@ function CalendarHeatmap({ history, goal }: { history: { date: string; steps: nu
             const isToday = cell.day === today;
             const bg = ratio >= 1 ? (isToday ? ACCENT : `${ACCENT}80`) : ratio >= 0.7 ? `${ACCENT}30` : 'rgba(255,255,255,0.07)';
             const numColor = ratio >= 1 ? (isToday ? '#000' : 'rgba(0,0,0,0.7)') : 'rgba(255,255,255,0.4)';
+            const selected = cell.day === selectedDay;
             return (
-              <View
+              <TouchableOpacity
                 key={ci}
-                style={[hm.cell, { backgroundColor: bg, borderWidth: isToday ? 1.5 : 0, borderColor: isToday ? ACCENT : 'transparent' }]}
-                accessible accessibilityRole="text"
-                accessibilityLabel={t.history.dayCellA11yLabel(cell.day, cell.steps.toLocaleString(localeTag))}
+                activeOpacity={0.7}
+                onPress={() => onSelect(cell.day)}
+                style={[hm.cell, { backgroundColor: bg, borderWidth: selected || isToday ? 1.5 : 0, borderColor: selected ? '#fff' : isToday ? ACCENT : 'transparent' }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={t.history.dayCellA11yLabel(cell.day, Math.round(cell.steps).toLocaleString(localeTag))}
               >
                 <Text style={[hm.daynum, { color: numColor }]}>{cell.day}</Text>
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>
@@ -149,6 +165,30 @@ const hm = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 10, height: 10, borderRadius: 3 },
   legendText: { fontSize: 9, fontWeight: '600', color: 'rgba(255,255,255,0.3)' },
+});
+
+// ── Day detail ────────────────────────────────────────────────────────────────
+
+function DayDetail({ date, steps, goal }: { date: string; steps: number; goal: number }) {
+  const { t, localeTag } = useLocale();
+  const [y, m, d] = date.split('-').map(Number);
+  const label = new Date(y, m - 1, d).toLocaleDateString(localeTag, { weekday: 'long', day: 'numeric', month: 'long' });
+  const reached = steps >= goal;
+  return (
+    <View style={dd.wrap} accessible accessibilityLiveRegion="polite"
+      accessibilityLabel={`${label}: ${Math.round(steps).toLocaleString(localeTag)}`}>
+      <Text style={dd.date}>{label}</Text>
+      <Text style={[dd.steps, reached && { color: ACCENT }]}>{Math.round(steps).toLocaleString(localeTag)}</Text>
+      <Text style={dd.sub}>{t.history.dayDetailPercentOfGoal(Math.round((steps / goal) * 100))}</Text>
+    </View>
+  );
+}
+
+const dd = StyleSheet.create({
+  wrap: { alignItems: 'center', paddingTop: 14, paddingBottom: 2 },
+  date: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' },
+  steps: { fontSize: 32, fontWeight: '900', color: '#fff', letterSpacing: -0.5, marginTop: 2 },
+  sub: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.3)', marginTop: 2 },
 });
 
 // ── Sub-tab selector ──────────────────────────────────────────────────────────
@@ -200,9 +240,11 @@ const ts = StyleSheet.create({
 function JoursView({ dailyGoal }: { dailyGoal: number }) {
   const { t, localeTag } = useLocale();
   const { monthHistory, isLoading } = useSharedHealthData();
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const now = new Date();
   const today = now.getDate();
+  const activeDay = selectedDay ?? today;
   const historyByDay = monthHistory.map(d => ({
     day: parseInt(d.date.split('-')[2], 10),
     steps: d.steps,
@@ -212,6 +254,8 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
   const daysAbove = historyByDay.filter(d => d.steps >= dailyGoal).length;
   const totalSteps = historyByDay.reduce((s, d) => s + d.steps, 0);
   const avgSteps = totalDays > 0 ? Math.round(totalSteps / totalDays) : 0;
+
+  const selectedEntry = historyByDay.find(d => d.day === activeDay);
 
   if (isLoading) return <Loader />;
 
@@ -235,6 +279,8 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
         <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <BarChart
             bars={historyByDay.map(d => ({ value: d.steps, highlight: d.day === today }))}
+            selectedIndex={historyByDay.findIndex(d => d.day === activeDay)}
+            onSelect={(i) => setSelectedDay(historyByDay[i].day)}
             goal={dailyGoal}
             labelFirst="1"
             labelMid={String(Math.ceil(totalDays / 2))}
@@ -242,11 +288,12 @@ function JoursView({ dailyGoal }: { dailyGoal: number }) {
             accessibilityLabel={`${t.history.stepsPerDay}. ${t.common.average}: ${fmtK(avgSteps, localeTag)}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
+        {selectedEntry && <DayDetail date={selectedEntry.date} steps={selectedEntry.steps} goal={dailyGoal} />}
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t.history.monthCalendar}</Text>
-        <CalendarHeatmap history={monthHistory} goal={dailyGoal} />
+        <CalendarHeatmap history={monthHistory} goal={dailyGoal} selectedDay={activeDay} onSelect={setSelectedDay} />
       </View>
     </>
   );
