@@ -23,7 +23,6 @@ const fr: Translations = {
   dashboard: {
     stepsToday: "PAS AUJOURD'HUI",
     monthlyProgressTitle: 'PROGRESSION DU MOIS',
-    mockBannerText: 'Données simulées — accès Santé requis',
     permissionDeniedBannerText: 'Accès Santé refusé — aucune donnée affichée',
     errorBannerText: 'Impossible de lire les données Santé',
     openHealthSettings: 'Ouvrir Réglages Santé',

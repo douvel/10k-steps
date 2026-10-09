@@ -21,7 +21,6 @@ const en = {
   dashboard: {
     stepsToday: 'STEPS TODAY',
     monthlyProgressTitle: 'MONTH PROGRESS',
-    mockBannerText: 'Simulated data — Health access required',
     permissionDeniedBannerText: 'Health access denied — showing no data',
     errorBannerText: 'Could not read Health data',
     openHealthSettings: 'Open Health Settings',

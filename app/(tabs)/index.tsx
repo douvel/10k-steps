@@ -117,7 +117,7 @@ function PaceBadge({ state }: { state: PaceState }) {
 export default function DashboardScreen() {
   const { top } = useSafeAreaInsets();
   const { t, localeTag } = useLocale();
-  const { todaySteps, monthHistory, isMockData, isLoading, error, errorKind, refresh } = useSharedHealthData();
+  const { todaySteps, monthHistory, isLoading, error, errorKind, refresh } = useSharedHealthData();
   const { dailyGoal } = useStepGoal();
   const [excludeToday, setExcludeToday] = useState(false);
 
@@ -151,17 +151,15 @@ export default function DashboardScreen() {
       <StatusBar style="light" />
 
       {/* Mock data / permission / error banner */}
-      {(isMockData || errorKind) && (
+      {errorKind && (
         <View style={styles.mockBanner}>
           <Text style={styles.mockBannerText}>
-            {isMockData
-              ? t.dashboard.mockBannerText
-              : errorKind === 'permission-denied'
-                ? t.dashboard.permissionDeniedBannerText
-                : t.dashboard.errorBannerText}
+            {errorKind === 'permission-denied'
+              ? t.dashboard.permissionDeniedBannerText
+              : t.dashboard.errorBannerText}
           </Text>
-          {error ? <Text style={styles.mockBannerError} selectable>{error}</Text> : null}
-          {(isMockData || errorKind === 'permission-denied') && (
+          {error ? <Text style={styles.mockBannerError} numberOfLines={2} selectable>{error}</Text> : null}
+          {errorKind === 'permission-denied' && (
             <TouchableOpacity style={styles.mockBannerButton} onPress={() => Linking.openURL('x-apple-health://').catch(() => Linking.openSettings())} accessibilityRole="button">
               <Text style={styles.mockBannerButtonText}>{t.dashboard.openHealthSettings}</Text>
             </TouchableOpacity>

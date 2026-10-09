@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
 import { HealthInitError, initHealthKitOnce, initHealthConnectOnce } from './nativeHealthInit';
+import { withRetry, readCache, writeCache } from './healthFetch';
 import type AppleHealthKitModule from 'react-native-health';
 
 export interface DaySteps {
@@ -9,8 +10,7 @@ export interface DaySteps {
   steps: number;
 }
 
-// 'unavailable' — no native module/device to read from (Expo Go, simulator timeout): mock data is a
-//   reasonable dev-time stand-in.
+// 'unavailable' — no native module/device to read from (Expo Go, simulator timeout).
 // 'permission-denied' — the user explicitly declined health data access (only detectable on Android;
 //   iOS never reports permission state, by HealthKit design).
 // 'unknown' — a real, unexpected failure reading from an actual device: never fabricate steps for this.
@@ -28,29 +28,9 @@ export interface HealthState {
   todaySteps: number;
   monthHistory: DaySteps[];
   hasPermission: boolean;
-  isMockData: boolean;
   isLoading: boolean;
   error: string | null;
   errorKind: HealthErrorKind | null;
-}
-
-// ── Mock data used when permissions are denied or API is unavailable ──────────
-
-function buildMockHistory(): DaySteps[] {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
-  const dayOfMonth = today.getDate();
-  const history: DaySteps[] = [];
-
-  for (let d = 1; d <= dayOfMonth; d++) {
-    const date = new Date(year, month, d);
-    history.push({
-      date: localDateStr(date),
-      steps: 6000 + Math.floor(Math.random() * 8000),
-    });
-  }
-  return history;
 }
 
 // Always use LOCAL calendar date — toISOString() is UTC and causes key
@@ -109,8 +89,10 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
   const yesterdayNoon = new Date(year, month, dayOfMonth - 1, 12, 0, 0);
   const yesterdayKey = localDateStr(new Date(year, month, dayOfMonth - 1));
 
-  // Read today's step count (midnight → now)
-  const todaySteps = await new Promise<number>((resolve, reject) => {
+  // The three queries are independent — run them concurrently instead of one after the other.
+  const monthStart = new Date(year, month, 1);
+
+  const todayPromise = new Promise<number>((resolve, reject) => {
     AppleHealthKit.getStepCount(
       { date: todayStart.toISOString() },
       (err, result) => {
@@ -120,48 +102,46 @@ async function fetchIOS(): Promise<Pick<HealthState, 'todaySteps' | 'monthHistor
     );
   });
 
-  // Read yesterday's steps via live endpoint — getDailyStepCountSamples can
-  // lag hours after midnight before finalising the previous day's aggregate.
-  // Using noon avoids UTC/local boundary ambiguity for getStepCount's date param.
-  const yesterdaySteps = await new Promise<number>((resolve) => {
+  // Yesterday's steps via the live endpoint — getDailyStepCountSamples can lag hours after
+  // midnight before finalising the previous day's aggregate. Using noon avoids UTC/local
+  // boundary ambiguity for getStepCount's date param.
+  const yesterdayPromise = new Promise<number>((resolve) => {
     AppleHealthKit.getStepCount(
       { date: yesterdayNoon.toISOString() },
       (err, result) => resolve(err ? 0 : (result?.value ?? 0)),
     );
   });
 
-  // Read daily step totals for each day of the current month
-  const monthStart = new Date(year, month, 1);
-
-  const monthHistory = await new Promise<DaySteps[]>((resolve, reject) => {
+  // Daily step totals for each day of the current month
+  const samplesPromise = new Promise<Array<{ startDate: string; value: number }>>((resolve, reject) => {
     AppleHealthKit.getDailyStepCountSamples(
-      {
-        startDate: monthStart.toISOString(),
-        endDate: now.toISOString(),
-      },
+      { startDate: monthStart.toISOString(), endDate: now.toISOString() },
       (err, results) => {
-        if (err) { reject(new HealthDataError('getDailyStepCountSamples: ' + JSON.stringify(err), 'unknown')); return; }
-        // Use LOCAL date — HealthKit may return UTC midnight after consolidation
-        // which would shift dates by 1 in UTC+N timezones near midnight.
-        const map = new Map<string, number>();
-        for (const r of results) {
-          const key = localDateStr(new Date(r.startDate));
-          map.set(key, (map.get(key) ?? 0) + r.value);
-        }
-        const history: DaySteps[] = [];
-        for (let d = 1; d <= dayOfMonth; d++) {
-          const key = localDateStr(new Date(year, month, d));
-          let steps = map.get(key) ?? 0;
-          // Patch: if HealthKit hasn't finalised yesterday yet, use live value
-          if (key === yesterdayKey && steps < yesterdaySteps) {
-            steps = yesterdaySteps;
-          }
-          history.push({ date: key, steps });
-        }
-        resolve(history);
+        if (err) reject(new HealthDataError('getDailyStepCountSamples: ' + JSON.stringify(err), 'unknown'));
+        else resolve(results ?? []);
       },
     );
   });
+
+  const [todaySteps, yesterdaySteps, samples] = await Promise.all([
+    todayPromise, yesterdayPromise, samplesPromise,
+  ]);
+
+  // Use LOCAL date — HealthKit may return UTC midnight after consolidation
+  // which would shift dates by 1 in UTC+N timezones near midnight.
+  const map = new Map<string, number>();
+  for (const r of samples) {
+    const key = localDateStr(new Date(r.startDate));
+    map.set(key, (map.get(key) ?? 0) + r.value);
+  }
+  const monthHistory: DaySteps[] = [];
+  for (let d = 1; d <= dayOfMonth; d++) {
+    const key = localDateStr(new Date(year, month, d));
+    let steps = map.get(key) ?? 0;
+    // Patch: if HealthKit hasn't finalised yesterday yet, use live value
+    if (key === yesterdayKey && steps < yesterdaySteps) steps = yesterdaySteps;
+    monthHistory.push({ date: key, steps });
+  }
 
   return { todaySteps, monthHistory, hasPermission: true };
 }
@@ -232,63 +212,82 @@ async function fetchAndroid(): Promise<Pick<HealthState, 'todaySteps' | 'monthHi
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
+const CACHE_KEY = '@health_data_cache';
+
+interface CachedData {
+  date: string; // local YYYY-MM-DD the data was fetched on
+  todaySteps: number;
+  monthHistory: DaySteps[];
+}
+
+// Fetching is driven by HealthDataProvider (not an effect here) so it can sequence this fetch
+// before the heavier history fetch instead of having both compete for HealthKit at launch.
 export function useHealthData() {
   const [state, setState] = useState<HealthState>({
     todaySteps: 0,
     monthHistory: [],
     hasPermission: false,
-    isMockData: false,
     isLoading: true,
     error: null,
     errorKind: null,
   });
+  const hasData = useRef(false);
 
   const load = useCallback(async () => {
-    setState((s) => ({ ...s, isLoading: true, error: null, errorKind: null }));
-    try {
-      let data: Pick<HealthState, 'todaySteps' | 'monthHistory' | 'hasPermission'>;
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new HealthDataError('HealthKit fetch timed out (simulator?)', 'unavailable')), 5000)
-      );
-      if (Platform.OS === 'ios') {
-        data = await Promise.race([fetchIOS(), timeoutPromise]);
-      } else {
-        data = await fetchAndroid();
-      }
-      setState({ ...data, isMockData: false, isLoading: false, error: null, errorKind: null });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
-
-      if (kind === 'unavailable') {
-        // Dev-time stand-in only: no native module/device to read real steps from.
-        const mock = buildMockHistory();
+    // First load: show last-known values immediately (same day only) while the real fetch runs.
+    if (!hasData.current) {
+      const cached = await readCache<CachedData>(CACHE_KEY);
+      if (cached && cached.date === localDateStr(new Date()) && !hasData.current) {
+        hasData.current = true;
         setState({
-          todaySteps: mock[mock.length - 1]?.steps ?? 0,
-          monthHistory: mock,
-          hasPermission: false,
-          isMockData: true,
+          todaySteps: cached.todaySteps,
+          monthHistory: cached.monthHistory,
+          hasPermission: true,
           isLoading: false,
-          error: message,
-          errorKind: kind,
+          error: null,
+          errorKind: null,
         });
+      }
+    }
+
+    // Only block the UI with a spinner when there is nothing to show yet.
+    if (!hasData.current) setState((s) => ({ ...s, isLoading: true, error: null, errorKind: null }));
+
+    try {
+      const run = Platform.OS === 'ios'
+        ? () => Promise.race([
+            fetchIOS(),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new HealthDataError('HealthKit fetch timed out', 'unavailable')), 10000)),
+          ])
+        : fetchAndroid;
+      const data = await withRetry(run);
+      hasData.current = true;
+      setState({ ...data, isLoading: false, error: null, errorKind: null });
+      writeCache<CachedData>(CACHE_KEY, {
+        date: localDateStr(new Date()),
+        todaySteps: data.todaySteps,
+        monthHistory: data.monthHistory,
+      });
+    } catch (err) {
+      // Already showing real data: a failed background refresh must not replace it with an error.
+      if (hasData.current) {
+        setState((s) => ({ ...s, isLoading: false }));
         return;
       }
-
-      // Permission denied or a genuine unexpected error — never fabricate steps for these.
+      const message = err instanceof Error ? err.message : String(err);
+      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
+      // Never fabricate steps: show an honest empty state with the error.
       setState({
         todaySteps: 0,
         monthHistory: [],
         hasPermission: false,
-        isMockData: false,
         isLoading: false,
         error: message,
         errorKind: kind,
       });
     }
   }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   return { ...state, refresh: load };
 }

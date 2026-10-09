@@ -56,16 +56,18 @@ Définie dans `utils/pace.ts` (testée dans `utils/__tests__/pace.test.ts`), imp
 ### Fetch partagé (`contexts/HealthDataContext.tsx`)
 - `useHealthData()` et `useHealthHistory()` (dans `hooks/`) ne doivent **jamais** être appelés directement depuis un écran — toujours passer par `useSharedHealthData()` / `useSharedHealthHistory()` (`contexts/HealthDataContext.tsx`).
 - `HealthDataProvider` est monté une seule fois dans `app/(tabs)/_layout.tsx` et fait le fetch une seule fois pour toute la session ; sans ça, changer d'onglet (Dashboard ↔ Historique ↔ sous-onglets Jours/Mois/Années) redéclenche un fetch HealthKit complet à chaque montage.
+- Le provider **pilote le fetch** (les hooks n'ont plus de `useEffect` de chargement) : dashboard d'abord, puis historique 4 ans, en séquence — en parallèle ils se ralentissaient mutuellement au lancement.
+- Les hooks affichent d'abord un **cache AsyncStorage** (`hooks/healthFetch.ts` ; valable le même jour pour le dashboard, la même année pour l'historique) puis rafraîchissent en arrière-plan : pas de spinner plein écran quand des données sont déjà affichées. Les échecs sont **retentés 3×** (`withRetry`) ; si des données réelles sont déjà à l'écran, un échec de refresh est silencieux (HealthKit renvoie « Not authorized » de façon transitoire au retour au premier plan / appareil verrouillé).
 - Le provider écoute aussi `AppState` : au retour au premier plan (background → active), il relance `refresh()` sur les deux hooks pour ne pas afficher des données figées.
 - Les deux hooks ont chacun besoin d'initialiser HealthKit/Health Connect ; `hooks/nativeHealthInit.ts` (`initHealthKitOnce`/`initHealthConnectOnce`) met en cache la promesse d'init en cours pour qu'un montage simultané des deux hooks ne déclenche **qu'un seul** round-trip natif au lieu de deux. Le cache se vide une fois la promesse réglée, donc un `refresh()` ultérieur relance bien un init frais.
 
 ### Erreurs typées (`HealthErrorKind`)
 Les deux hooks classifient toute erreur de fetch en trois catégories (voir le type `HealthErrorKind` dans `hooks/useHealthData.ts`/`useHealthHistory.ts`) :
-- `'unavailable'` — module natif absent (Expo Go) ou timeout simulateur : **seul** ce cas affiche des données factices (`isMockData: true`), utile en dev.
+- `'unavailable'` — module natif absent (Expo Go) ou timeout : état vide honnête + bannière d'erreur (plus aucune donnée simulée).
 - `'permission-denied'` — accès santé explicitement refusé (détectable seulement sur Android/Health Connect ; iOS ne renseigne jamais l'état de permission par design HealthKit).
 - `'unknown'` — vraie erreur inattendue sur un appareil réel.
-- Pour `'permission-denied'` et `'unknown'`, ne **jamais** fabriquer de pas : l'état retourné est honnête (zéros + `error`/`errorKind`). Seul `'unavailable'` mock des données.
-- La bannière du Dashboard (`index.tsx`) distingue les trois textes (`mockBannerText` / `permissionDeniedBannerText` / `errorBannerText` dans `i18n/`).
+- Ne **jamais** fabriquer de pas : l'état retourné en cas d'échec est honnête (zéros + `error`/`errorKind`).
+- La bannière du Dashboard (`index.tsx`) distingue `permissionDeniedBannerText` / `errorBannerText` (`i18n/`).
 
 ## Bug connu — Lag HealthKit après minuit
 `getDailyStepCountSamples` peut mettre plusieurs heures à finaliser les données du jour qui vient de se terminer. Fix appliqué dans **les deux** hooks (`useHealthData.ts` pour `monthHistory`, `useHealthHistory.ts` pour les totaux du mois/année en cours) : on appelle aussi `getStepCount` sur **hier** (endpoint temps réel) et on patche la valeur historique si elle est inférieure à la valeur live. Si une nouvelle vue agrège des pas côté iOS, penser à répliquer ce patch — sinon son total peut diverger du Dashboard pendant les quelques heures qui suivent minuit.

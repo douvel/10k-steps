@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { HEALTH_CONNECT_STEPS_RECORD } from '../constants/health';
 import { HealthInitError, initHealthKitOnce, initHealthConnectOnce } from './nativeHealthInit';
+import { withRetry, readCache, writeCache } from './healthFetch';
 import type AppleHealthKitModule from 'react-native-health';
 
 export interface MonthTotal {
@@ -32,7 +33,6 @@ export interface HealthHistoryState {
   isLoading: boolean;
   error: string | null;
   errorKind: HealthErrorKind | null;
-  isMockData: boolean;
 }
 
 const YEARS_BACK = 4;
@@ -44,24 +44,6 @@ function localDateStr(date: Date): string {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
-}
-
-function buildMockMonthly(now: Date): MonthTotal[] {
-  const seed = [210000, 185000, 230000, 195000, 220000, 200000, 175000, 215000, 240000, 180000, 205000, 195000];
-  const result: MonthTotal[] = [];
-  for (let m = 0; m <= now.getMonth(); m++) {
-    result.push({ year: now.getFullYear(), month: m, steps: seed[m] ?? 200000 });
-  }
-  return result;
-}
-
-function buildMockYearly(now: Date): YearTotal[] {
-  const seed = [2800000, 3100000, 2950000, 3200000];
-  const result: YearTotal[] = [];
-  for (let i = YEARS_BACK - 1; i >= 0; i--) {
-    result.push({ year: now.getFullYear() - i, steps: seed[YEARS_BACK - 1 - i] ?? 3000000 });
-  }
-  return result;
 }
 
 // ── iOS — HealthKit ───────────────────────────────────────────────────────────
@@ -212,6 +194,16 @@ async function fetchAndroidHistory(): Promise<Pick<HealthHistoryState, 'monthlyT
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
+const CACHE_KEY = '@health_history_cache';
+
+interface CachedHistory {
+  year: number;
+  monthlyTotals: MonthTotal[];
+  yearlyTotals: YearTotal[];
+}
+
+// Fetching is driven by HealthDataProvider (not an effect here) so it runs after the lighter
+// dashboard fetch instead of competing with it for HealthKit at launch.
 export function useHealthHistory() {
   const [state, setState] = useState<HealthHistoryState>({
     monthlyTotals: [],
@@ -219,50 +211,50 @@ export function useHealthHistory() {
     isLoading: true,
     error: null,
     errorKind: null,
-    isMockData: false,
   });
+  const hasData = useRef(false);
 
   const load = useCallback(async () => {
-    setState(s => ({ ...s, isLoading: true, error: null, errorKind: null }));
-    try {
-      let data: Pick<HealthHistoryState, 'monthlyTotals' | 'yearlyTotals'>;
-      if (Platform.OS === 'ios') {
-        data = await fetchIOSHistory();
-      } else {
-        data = await fetchAndroidHistory();
-      }
-      setState({ ...data, isLoading: false, error: null, errorKind: null, isMockData: false });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
-
-      if (kind === 'unavailable') {
-        // Dev-time stand-in only: no native module/device to read real steps from.
-        const now = new Date();
+    // First load: show last-known totals immediately (same year only) while the real fetch runs.
+    if (!hasData.current) {
+      const cached = await readCache<CachedHistory>(CACHE_KEY);
+      if (cached && cached.year === new Date().getFullYear() && !hasData.current) {
+        hasData.current = true;
         setState({
-          monthlyTotals: buildMockMonthly(now),
-          yearlyTotals: buildMockYearly(now),
+          monthlyTotals: cached.monthlyTotals,
+          yearlyTotals: cached.yearlyTotals,
           isLoading: false,
-          error: message,
-          errorKind: kind,
-          isMockData: true,
+          error: null,
+          errorKind: null,
         });
+      }
+    }
+
+    if (!hasData.current) setState(s => ({ ...s, isLoading: true, error: null, errorKind: null }));
+
+    try {
+      const data = await withRetry(Platform.OS === 'ios' ? fetchIOSHistory : fetchAndroidHistory);
+      hasData.current = true;
+      setState({ ...data, isLoading: false, error: null, errorKind: null });
+      writeCache<CachedHistory>(CACHE_KEY, { year: new Date().getFullYear(), ...data });
+    } catch (err) {
+      // Already showing real data: a failed background refresh must not replace it with an error.
+      if (hasData.current) {
+        setState(s => ({ ...s, isLoading: false }));
         return;
       }
-
-      // Permission denied or a genuine unexpected error — never fabricate steps for these.
+      const message = err instanceof Error ? err.message : String(err);
+      const kind: HealthErrorKind = err instanceof HealthDataError ? err.kind : 'unknown';
+      // Never fabricate steps: show an honest empty state with the error.
       setState({
         monthlyTotals: [],
         yearlyTotals: [],
         isLoading: false,
         error: message,
         errorKind: kind,
-        isMockData: false,
       });
     }
   }, []);
-
-  useEffect(() => { load(); }, [load]);
 
   return { ...state, refresh: load };
 }

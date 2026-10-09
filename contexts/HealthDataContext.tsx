@@ -18,19 +18,24 @@ export function HealthDataProvider({ children }: { children: ReactNode }) {
   const data = useHealthData();
   const history = useHealthHistory();
 
+  // Dashboard data first (small, fast), then the 4-year history: running them concurrently made
+  // both slower and delayed the first screen. Both hooks are refs-stable so this runs once.
+  const refreshAll = useRef(() => {});
+  refreshAll.current = () => data.refresh().then(() => history.refresh());
+  useEffect(() => { refreshAll.current(); }, []);
+
   // Steps recorded while the app was backgrounded aren't reflected until the next fetch —
   // refresh whenever the user returns to the app instead of only on mount / manual refresh.
   const appState = useRef(AppState.currentState);
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextState === 'active') {
-        data.refresh();
-        history.refresh();
+        refreshAll.current();
       }
       appState.current = nextState;
     });
     return () => subscription.remove();
-  }, [data.refresh, history.refresh]);
+  }, []);
 
   return (
     <HealthDataContext.Provider value={{ data, history }}>
