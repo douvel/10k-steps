@@ -169,17 +169,18 @@ const hm = StyleSheet.create({
 
 // ── Day detail ────────────────────────────────────────────────────────────────
 
-function DetailPanel({ title, steps, reached, subtitle }: {
-  title: string; steps: number; reached: boolean; subtitle: string;
+function DetailPanel({ title, steps, reached, subtitle, extra }: {
+  title: string; steps: number; reached: boolean; subtitle: string; extra?: { text: string; color: string };
 }) {
   const { localeTag } = useLocale();
   const formatted = Math.round(steps).toLocaleString(localeTag);
   return (
     <View style={dd.wrap} accessible accessibilityLiveRegion="polite"
-      accessibilityLabel={`${title}: ${formatted}. ${subtitle}`}>
+      accessibilityLabel={`${title}: ${formatted}. ${subtitle}${extra ? `. ${extra.text}` : ''}`}>
       <Text style={dd.date}>{title}</Text>
       <Text style={[dd.steps, reached && { color: ACCENT }]}>{formatted}</Text>
       <Text style={dd.sub}>{subtitle}</Text>
+      {extra && <Text style={[dd.extra, { color: extra.color }]}>{extra.text}</Text>}
     </View>
   );
 }
@@ -199,6 +200,7 @@ const dd = StyleSheet.create({
   date: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' },
   steps: { fontSize: 32, fontWeight: '900', color: '#fff', letterSpacing: -0.5, marginTop: 2 },
   sub: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.3)', marginTop: 2 },
+  extra: { fontSize: 14, fontWeight: '800', marginTop: 8 },
 });
 
 // ── Sub-tab selector ──────────────────────────────────────────────────────────
@@ -466,6 +468,9 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
             steps={selected.steps}
             reached={detail.reached}
             subtitle={`${t.history.dayDetailPercentOfGoal(detail.goalPct)} · ${detail.avgPerDay.toLocaleString(localeTag)} ${t.settings.stepsPerDayShort}`}
+            extra={detail.paceDelta === null ? undefined : detail.paceDelta >= 0
+              ? { text: t.dashboard.paceAheadTotal(detail.paceDelta.toLocaleString(localeTag)), color: '#4ADE80' }
+              : { text: t.dashboard.paceBehindTotal(Math.abs(detail.paceDelta).toLocaleString(localeTag)), color: '#EF4444' }}
           />
         )}
       </View>

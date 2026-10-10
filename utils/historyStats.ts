@@ -79,5 +79,8 @@ export function computeYearDetail(
     goalPct: goal > 0 ? Math.round((y.steps / goal) * 100) : 0,
     avgPerDay: Math.round(y.steps / daysCounted),
     reached: y.steps >= goal,
+    // Current year only: steps ahead (+) / behind (−) of the pace needed to hit dailyGoal every
+    // day so far (same convention as the dashboard's monthly cumulative delta).
+    paceDelta: isCurrent ? Math.round(y.steps - dailyGoal * dayOfYear) : null,
   };
 }
