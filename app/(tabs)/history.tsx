@@ -6,7 +6,7 @@ import { useSharedHealthData, useSharedHealthHistory } from '../../contexts/Heal
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useLocale } from '../../i18n';
 import { fmtK } from '../../utils/format';
-import { computeMonthlyStats, computeYearlyStats } from '../../utils/historyStats';
+import { computeMonthlyStats, computeYearlyStats, computeMonthDetail } from '../../utils/historyStats';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
@@ -169,18 +169,28 @@ const hm = StyleSheet.create({
 
 // ── Day detail ────────────────────────────────────────────────────────────────
 
+function DetailPanel({ title, steps, reached, subtitle }: {
+  title: string; steps: number; reached: boolean; subtitle: string;
+}) {
+  const { localeTag } = useLocale();
+  const formatted = Math.round(steps).toLocaleString(localeTag);
+  return (
+    <View style={dd.wrap} accessible accessibilityLiveRegion="polite"
+      accessibilityLabel={`${title}: ${formatted}. ${subtitle}`}>
+      <Text style={dd.date}>{title}</Text>
+      <Text style={[dd.steps, reached && { color: ACCENT }]}>{formatted}</Text>
+      <Text style={dd.sub}>{subtitle}</Text>
+    </View>
+  );
+}
+
 function DayDetail({ date, steps, goal }: { date: string; steps: number; goal: number }) {
   const { t, localeTag } = useLocale();
   const [y, m, d] = date.split('-').map(Number);
   const label = new Date(y, m - 1, d).toLocaleDateString(localeTag, { weekday: 'long', day: 'numeric', month: 'long' });
-  const reached = steps >= goal;
   return (
-    <View style={dd.wrap} accessible accessibilityLiveRegion="polite"
-      accessibilityLabel={`${label}: ${Math.round(steps).toLocaleString(localeTag)}`}>
-      <Text style={dd.date}>{label}</Text>
-      <Text style={[dd.steps, reached && { color: ACCENT }]}>{Math.round(steps).toLocaleString(localeTag)}</Text>
-      <Text style={dd.sub}>{t.history.dayDetailPercentOfGoal(Math.round((steps / goal) * 100))}</Text>
-    </View>
+    <DetailPanel title={label} steps={steps} reached={steps >= goal}
+      subtitle={t.history.dayDetailPercentOfGoal(Math.round((steps / goal) * 100))} />
   );
 }
 
@@ -306,7 +316,12 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
   const MONTH_NAMES_SHORT = t.history.monthNamesShort;
   const { monthlyTotals, isLoading } = useSharedHealthHistory();
 
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+
   const now = new Date();
+  const activeMonth = selectedMonth ?? now.getMonth();
+  const selected = monthlyTotals.find(m => m.month === activeMonth);
+  const detail = selected ? computeMonthDetail(selected, dailyGoal, now) : null;
   const { totalSteps, bestMonth, monthsAbove } = useMemo(
     () => computeMonthlyStats(monthlyTotals, dailyGoal),
     [monthlyTotals, dailyGoal],
@@ -337,12 +352,22 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
               const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
               return { value: m.steps, highlight: m.month === now.getMonth() };
             })}
+            selectedIndex={monthlyTotals.findIndex(m => m.month === activeMonth)}
+            onSelect={(i) => setSelectedMonth(monthlyTotals[i].month)}
             labelFirst={MONTH_NAMES_SHORT[monthlyTotals[0]?.month ?? 0]}
             labelMid={MONTH_NAMES_SHORT[monthlyTotals[Math.floor(monthlyTotals.length / 2)]?.month ?? 5]}
             labelLast={MONTH_NAMES_SHORT[monthlyTotals[monthlyTotals.length - 1]?.month ?? now.getMonth()]}
             accessibilityLabel={`${t.history.stepsPerMonth(now.getFullYear())}. ${t.history.best}: ${bestMonth.month >= 0 ? MONTH_NAMES_SHORT[bestMonth.month] : '—'}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
+        {selected && detail && (
+          <DetailPanel
+            title={new Date(selected.year, selected.month, 1).toLocaleDateString(localeTag, { month: 'long', year: 'numeric' })}
+            steps={selected.steps}
+            reached={detail.reached}
+            subtitle={`${t.history.dayDetailPercentOfGoal(detail.goalPct)} · ${detail.avgPerDay.toLocaleString(localeTag)} ${t.settings.stepsPerDayShort}`}
+          />
+        )}
         {/* Month labels row */}
         <View style={styles.monthLabels}>
           {monthlyTotals.map(m => (
@@ -360,8 +385,17 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
           const monthGoal = dailyGoal * daysInMonth;
           const ratio = monthGoal > 0 ? Math.min(1, m.steps / monthGoal) : 0;
           const isCurrentMonth = m.month === now.getMonth();
+          const isSelected = m.month === activeMonth;
           return (
-            <View key={m.month} style={styles.monthRow}>
+            <TouchableOpacity
+              key={m.month}
+              style={[styles.monthRow, isSelected && styles.monthRowSelected]}
+              activeOpacity={0.7}
+              onPress={() => setSelectedMonth(m.month)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${MONTH_NAMES_SHORT[m.month]}: ${Math.round(m.steps).toLocaleString(localeTag)}`}
+            >
               <Text style={[styles.monthRowLabel, isCurrentMonth && { color: ACCENT }]}>
                 {MONTH_NAMES_SHORT[m.month]}
               </Text>
@@ -371,7 +405,7 @@ function MoisView({ dailyGoal }: { dailyGoal: number }) {
               <Text style={[styles.monthRowVal, isCurrentMonth && { color: ACCENT }]}>
                 {fmtK(m.steps, localeTag)}
               </Text>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -501,7 +535,8 @@ const styles = StyleSheet.create({
   monthLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, paddingHorizontal: 2 },
   monthLabel: { fontSize: 8, fontWeight: '600', color: 'rgba(255,255,255,0.2)' },
 
-  monthRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  monthRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6, paddingVertical: 4, paddingHorizontal: 6, marginHorizontal: -6, borderRadius: 8, borderWidth: 1, borderColor: 'transparent' },
+  monthRowSelected: { borderColor: 'rgba(255,255,255,0.35)' },
   monthRowLabel: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.4)', width: 32 },
   monthBarTrack: { flex: 1, height: 6, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 3, overflow: 'hidden' },
   monthBarFill: { height: '100%', borderRadius: 3 },

@@ -45,3 +45,18 @@ describe('computeYearlyStats', () => {
     expect(stats.bestYear).toEqual({ year: 2026, steps: 0 });
   });
 });
+
+import { computeMonthDetail } from '../historyStats';
+
+describe('computeMonthDetail', () => {
+  it('averages a past month over all its days', () => {
+    const d = computeMonthDetail({ year: 2026, month: 8, steps: 300000 }, 10000, new Date(2026, 9, 10));
+    expect(d).toEqual({ goalPct: 100, avgPerDay: 10000, reached: true });
+  });
+  it('averages the current month over days elapsed', () => {
+    const d = computeMonthDetail({ year: 2026, month: 9, steps: 100000 }, 10000, new Date(2026, 9, 10));
+    expect(d.avgPerDay).toBe(10000);
+    expect(d.goalPct).toBe(32);
+    expect(d.reached).toBe(false);
+  });
+});

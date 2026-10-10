@@ -43,3 +43,21 @@ export function computeYearlyStats(yearlyTotals: YearTotal[], currentYear: numbe
   );
   return { totalSteps, bestYear };
 }
+
+// Detail for one month of the Mois view. The current month's average is over days elapsed
+// (not the whole month), otherwise it would be understated until the month ends.
+export function computeMonthDetail(
+  m: { year: number; month: number; steps: number },
+  dailyGoal: number,
+  now: Date,
+) {
+  const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
+  const isCurrent = m.year === now.getFullYear() && m.month === now.getMonth();
+  const daysCounted = isCurrent ? now.getDate() : daysInMonth;
+  const goal = dailyGoal * daysInMonth;
+  return {
+    goalPct: goal > 0 ? Math.round((m.steps / goal) * 100) : 0,
+    avgPerDay: Math.round(m.steps / daysCounted),
+    reached: m.steps >= goal,
+  };
+}
