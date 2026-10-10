@@ -61,3 +61,23 @@ export function computeMonthDetail(
     reached: m.steps >= goal,
   };
 }
+
+// Detail for one year of the Années view. As for months, the current year's average is over
+// days elapsed so far (day-of-year), not the whole year.
+export function computeYearDetail(
+  y: { year: number; steps: number },
+  dailyGoal: number,
+  now: Date,
+) {
+  const daysInYear = (new Date(y.year + 1, 0, 1).getTime() - new Date(y.year, 0, 1).getTime()) / 86_400_000;
+  const roundedDays = Math.round(daysInYear);
+  const isCurrent = y.year === now.getFullYear();
+  const dayOfYear = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86_400_000) + 1;
+  const daysCounted = isCurrent ? dayOfYear : roundedDays;
+  const goal = dailyGoal * roundedDays;
+  return {
+    goalPct: goal > 0 ? Math.round((y.steps / goal) * 100) : 0,
+    avgPerDay: Math.round(y.steps / daysCounted),
+    reached: y.steps >= goal,
+  };
+}

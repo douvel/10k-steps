@@ -60,3 +60,19 @@ describe('computeMonthDetail', () => {
     expect(d.reached).toBe(false);
   });
 });
+
+import { computeYearDetail } from '../historyStats';
+
+describe('computeYearDetail', () => {
+  it('averages a past year over all its days (leap-aware)', () => {
+    const d = computeYearDetail({ year: 2024, steps: 3660000 }, 10000, new Date(2026, 9, 10));
+    expect(d).toEqual({ goalPct: 100, avgPerDay: 10000, reached: true });
+  });
+  it('averages the current year over days elapsed', () => {
+    // Oct 10 2026 is day 283
+    const d = computeYearDetail({ year: 2026, steps: 2830000 }, 10000, new Date(2026, 9, 10));
+    expect(d.avgPerDay).toBe(10000);
+    expect(d.goalPct).toBe(78);
+    expect(d.reached).toBe(false);
+  });
+});

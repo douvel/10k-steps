@@ -6,7 +6,7 @@ import { useSharedHealthData, useSharedHealthHistory } from '../../contexts/Heal
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useLocale } from '../../i18n';
 import { fmtK } from '../../utils/format';
-import { computeMonthlyStats, computeYearlyStats, computeMonthDetail } from '../../utils/historyStats';
+import { computeMonthlyStats, computeYearlyStats, computeMonthDetail, computeYearDetail } from '../../utils/historyStats';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
@@ -426,6 +426,10 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
     [yearlyTotals, currentYear],
   );
   const yearGoal = dailyGoal * 365;
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const activeYear = selectedYear ?? currentYear;
+  const selected = yearlyTotals.find(y => y.year === activeYear);
+  const detail = selected ? computeYearDetail(selected, dailyGoal, now) : null;
 
   if (isLoading) return <Loader />;
 
@@ -449,11 +453,21 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
         <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <BarChart
             bars={yearlyTotals.map(y => ({ value: y.steps, highlight: y.year === currentYear }))}
+            selectedIndex={yearlyTotals.findIndex(y => y.year === activeYear)}
+            onSelect={(i) => setSelectedYear(yearlyTotals[i].year)}
             labelFirst={String(yearlyTotals[0]?.year ?? '')}
             labelLast={String(currentYear)}
             accessibilityLabel={`${t.history.stepsPerYear}. ${t.history.bestYear}: ${bestYear.year}. ${t.common.total}: ${fmtK(totalSteps, localeTag)}.`}
           />
         </View>
+        {selected && detail && (
+          <DetailPanel
+            title={String(selected.year)}
+            steps={selected.steps}
+            reached={detail.reached}
+            subtitle={`${t.history.dayDetailPercentOfGoal(detail.goalPct)} · ${detail.avgPerDay.toLocaleString(localeTag)} ${t.settings.stepsPerDayShort}`}
+          />
+        )}
       </View>
 
       <View style={styles.card}>
@@ -461,14 +475,23 @@ function AnneesView({ dailyGoal }: { dailyGoal: number }) {
         {yearlyTotals.map(y => {
           const ratio = yearGoal > 0 ? Math.min(1, y.steps / yearGoal) : 0;
           const isCurrent = y.year === currentYear;
+          const isSelected = y.year === activeYear;
           return (
-            <View key={y.year} style={styles.monthRow}>
+            <TouchableOpacity
+              key={y.year}
+              style={[styles.monthRow, isSelected && styles.monthRowSelected]}
+              activeOpacity={0.7}
+              onPress={() => setSelectedYear(y.year)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${y.year}: ${Math.round(y.steps).toLocaleString(localeTag)}`}
+            >
               <Text style={[styles.monthRowLabel, isCurrent && { color: ACCENT }]}>{y.year}</Text>
               <View style={styles.monthBarTrack}>
                 <View style={[styles.monthBarFill, { width: `${Math.round(ratio * 100)}%` as `${number}%`, backgroundColor: ratio >= 1 ? ACCENT : `${ACCENT}70` }]} />
               </View>
               <Text style={[styles.monthRowVal, isCurrent && { color: ACCENT }]}>{fmtK(y.steps, localeTag)}</Text>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
