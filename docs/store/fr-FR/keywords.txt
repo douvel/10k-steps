@@ -1,0 +1,1 @@
+podomètre,marche,santé,compteur,rythme,moyenne,healthkit,activité,habitude,suivi,mensuel,annuel

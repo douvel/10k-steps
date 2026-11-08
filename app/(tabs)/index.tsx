@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline } from 'react-native-svg';
 import { useSharedHealthData } from '../../contexts/HealthDataContext';
 import { useStepGoal } from '../../hooks/useStepGoal';
+import { useReviewPrompt } from '../../hooks/useReviewPrompt';
 import { useState } from 'react';
 import { useLocale } from '../../i18n';
 import { fmtK } from '../../utils/format';
@@ -130,6 +131,9 @@ export default function DashboardScreen() {
   } = computeMonthProgress(now, dailyGoal, monthlyTotal, excludeToday);
 
   const paceState = getPaceState(t, localeTag, dailyAverage - dailyGoal, dailyGoal, cumulativeDelta, monthDone);
+
+  // Les données réelles doivent être chargées : sans erreur ni chargement en cours.
+  useReviewPrompt(monthDone && !isLoading && !error);
 
   const goalReached = todaySteps >= dailyGoal;
   const progress = todaySteps / dailyGoal;
