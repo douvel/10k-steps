@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0b0f">
 <title>Walkever: Step Goal Tracker — Are you on pace with your step goal?</title>
 <meta name="description" content="Walkever compares your steps to your goal pace by day, month and year. Free, no ads, no data collected.">
 <meta name="apple-itunes-app" content="app-id=6762572011">
@@ -16,52 +17,76 @@
 <link rel="stylesheet" href="/style.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/img/logo-32.png">
 <link rel="apple-touch-icon" href="/img/logo-180.png">
+<script src="/main.js" defer></script>
 </head>
 <body>
-<div class="wrap">
-<header><a class="brand" href="/en/"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a><nav class="lang"><a href="/fr/">FR</a><a href="/en/" aria-current="page">EN</a></nav></header>
+<div class="progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<header><div class="wrap"><a class="brand" href="/en/"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
+<nav class="nav" aria-label="Navigation"><span class="lang"><a href="/fr/">FR</a><a href="/en/" aria-current="page">EN</a></span><a class="btn sm" href="https://apps.apple.com/us/app/id6762572011">App Store</a></nav></div></header>
 <main>
-<div class="hero">
+<div class="hero"><div class="wrap">
   <div>
-    <h1>You already walk. Are you on pace?</h1>
-    <p class="sub">Walkever compares your steps to your goal pace by day, month and year. Free, no ads, no data collected.</p>
-    <a class="btn" href="https://apps.apple.com/us/app/id6762572011">Download on the App Store</a>
+    <p class="eyebrow"><b></b>Step tracker for iPhone</p>
+    <h1 data-split>You already walk. <em>Are you on pace?</em></h1>
+    <p class="sub rv">Walkever compares your steps to your goal pace by day, month and year. Free, no ads, no data collected.</p>
+    <div class="cta rv" style="--d:120ms"><a class="btn" href="https://apps.apple.com/us/app/id6762572011">Download on the App Store<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <ul class="pills rv" style="--d:220ms"><li>Free</li><li>No ads</li><li>No data collected</li><li>English & French</li></ul>
   </div>
-  <img class="shot" src="/img/en/1-dashboard.png" alt="Dashboard: today's steps, month progress and required average">
-</div>
-<section>
-  <h2>Knowing how much you walked isn't enough.</h2>
-  <div class="grid">
-    <div class="card"><h3>Required average</h3><p>See how many steps per day you still need to finish the month on track, with or without today.</p></div>
-    <div class="card"><h3>Ahead or behind</h3><p>Your cumulative gap against the ideal pace, with a progress bar that changes color.</p></div>
-    <div class="card"><h3>History</h3><p>Your steps day by day, month by month, year by year. Tap for the exact total, percentage of goal and average.</p></div>
+  <div class="stage rv" style="--d:200ms">
+    <div class="phone"><img src="/img/en/1-dashboard.png" width="560" height="1212" alt="Dashboard: today's steps, month progress and required average" fetchpriority="high"></div>
+    <div class="chip a"><i></i>134 steps/day behind</div>
+    <div class="chip b"><i></i>73% of goal</div>
   </div>
-</section>
-<section>
-  <h2>Preview</h2>
-  <div class="shots">
-    <img src="/img/en/1-dashboard.png" alt="Dashboard" loading="lazy">
-    <img src="/img/en/2-days.png" alt="Daily history with month calendar" loading="lazy">
-    <img src="/img/en/3-months.png" alt="Monthly history" loading="lazy">
-    <img src="/img/en/4-years.png" alt="Yearly history" loading="lazy">
+</div></div>
+<div class="marquee" aria-hidden="true"><div class="track"><span>Day</span><span>Month</span><span>Year</span><span>Ahead</span><span>Behind</span><span>Ideal pace</span><span>Goal</span><span>Day</span><span>Month</span><span>Year</span><span>Ahead</span><span>Behind</span><span>Ideal pace</span><span>Goal</span><span>Day</span><span>Month</span><span>Year</span><span>Ahead</span><span>Behind</span><span>Ideal pace</span><span>Goal</span><span>Day</span><span>Month</span><span>Year</span><span>Ahead</span><span>Behind</span><span>Ideal pace</span><span>Goal</span></div></div>
+
+<section><div class="wrap">
+  <div class="pace">
+    <div class="rv"><p class="kicker">The pace</p><h2>Knowing how much you walked isn't enough.</h2><p class="lead">Walkever compares your curve to your goal's. You see right away whether you're ahead, on track or behind, and by how much.</p></div>
+    <div class="chart rv" style="--d:150ms">
+      <svg viewBox="0 0 600 300" role="img" aria-label="Ideal pace / You">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5e2e" stop-opacity=".28"/><stop offset="1" stop-color="#ff5e2e" stop-opacity="0"/></linearGradient></defs>
+        <g class="grid"><line x1="0" y1="40" x2="600" y2="40"/><line x1="0" y1="110" x2="600" y2="110"/><line x1="0" y1="180" x2="600" y2="180"/><line x1="0" y1="250" x2="600" y2="250"/></g>
+        <path class="fill" d="M0 250 C60 244 90 236 130 222 S200 196 240 180 S300 176 340 150 S420 98 470 84 S550 52 590 34 L590 250 Z"/>
+        <line class="ideal" x1="0" y1="250" x2="590" y2="60"/>
+        <path class="you" pathLength="1" d="M0 250 C60 244 90 236 130 222 S200 196 240 180 S300 176 340 150 S420 98 470 84 S550 52 590 34"/>
+        <circle class="ring" cx="590" cy="34" r="8"/><circle class="dot" cx="590" cy="34" r="8"/>
+      </svg>
+      <div class="legend"><span><i></i>Ideal pace</span><span><i></i>You</span></div>
+    </div>
   </div>
-</section>
-<section>
-  <h2>Privacy first</h2>
-  <p class="sub">Reads directly from Apple Health. Your data stays on your iPhone. <a href="/en/privacy.html">Privacy policy</a></p>
-</section>
-<section>
-  <h2>FAQ</h2>
-  <details><summary>Does it cost anything?</summary><p>No, the app is free and ad-free.</p></details>
-  <details><summary>Where do my steps come from?</summary><p>Apple Health, no manual entry.</p></details>
-  <details><summary>Can I change my goal?</summary><p>Yes, 10,000 steps by default; the monthly goal is calculated for you.</p></details>
-  <details><summary>Which languages?</summary><p>English and French.</p></details>
-</section>
+  <div class="cards">
+    <article class="card rv"><div class="viz"><div class="big"><span data-count="10370">0</span><small>over 8 days</small></div></div><div><h3>Required average</h3><p>See how many steps per day you still need to finish the month on track, with or without today.</p></div></article>
+    <article class="card rv" style="--d:100ms"><div class="viz" style="display:block;padding-top:22px" data-states="[{&quot;c&quot;:&quot;#DC2626&quot;,&quot;f&quot;:3,&quot;t&quot;:&quot;3,600 steps behind&quot;},{&quot;c&quot;:&quot;#3B82F6&quot;,&quot;f&quot;:6,&quot;t&quot;:&quot;On track&quot;},{&quot;c&quot;:&quot;#4ADE80&quot;,&quot;f&quot;:8,&quot;t&quot;:&quot;+1,200 steps ahead&quot;},{&quot;c&quot;:&quot;#F59E0B&quot;,&quot;f&quot;:10,&quot;t&quot;:&quot;Monthly goal reached!&quot;}]"><div class="segs"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i></div><div class="ideal-mark"></div><div class="state"></div></div><div><h3>Ahead or behind</h3><p>Your cumulative gap against the ideal pace, with a progress bar that changes color.</p></div></article>
+    <article class="card rv" style="--d:200ms"><div class="viz"><div class="bars"><i style="--h:40%;--i:0"></i><i style="--h:62%;--i:1"></i><i style="--h:48%;--i:2"></i><i style="--h:80%;--i:3"></i><i style="--h:70%;--i:4"></i><i style="--h:92%;--i:5"></i><i style="--h:58%;--i:6"></i><i style="--h:100%;--i:7"></i><i style="--h:76%;--i:8"></i><i style="--h:88%;--i:9"></i></div></div><div><h3>History</h3><p>Your steps day by day, month by month, year by year. Tap for the exact total, percentage of goal and average.</p></div></article>
+  </div>
+</div></section>
+
+<section class="show"><div class="wrap">
+  <p class="kicker rv">Preview</p><h2 class="rv">Every screen answers one question.</h2>
+  <div class="phones"><figure class="pw" style="margin:0"><div class="phone"><img src="/img/en/1-dashboard.png" width="560" height="1212" alt="Dashboard" loading="lazy"></div><figcaption>Today</figcaption></figure><figure class="pw" style="margin:0"><div class="phone"><img src="/img/en/2-days.png" width="560" height="1212" alt="Daily history with month calendar" loading="lazy"></div><figcaption>Days</figcaption></figure><figure class="pw" style="margin:0"><div class="phone"><img src="/img/en/3-months.png" width="560" height="1212" alt="Monthly history" loading="lazy"></div><figcaption>Months</figcaption></figure><figure class="pw" style="margin:0"><div class="phone"><img src="/img/en/4-years.png" width="560" height="1212" alt="Yearly history" loading="lazy"></div><figcaption>Years</figcaption></figure></div>
+</div></section>
+
+<section><div class="wrap">
+  <p class="kicker rv">Privacy</p><h2 class="rv">Privacy first.</h2>
+  <p class="lead rv">Reads directly from Apple Health. Your data stays on your iPhone. <a href="/en/privacy.html">Privacy policy</a></p>
+  <div class="priv"><div class="stat rv" style="--d:0ms"><b><em>0</em> ads</b><p>No ads, ever in your way.</p></div><div class="stat rv" style="--d:100ms"><b><em>0</em> data collected</b><p>Nothing leaves your iPhone.</p></div><div class="stat rv" style="--d:200ms"><b><em>1</em> source</b><p>Apple Health, no manual entry.</p></div></div>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <h2 class="rv">FAQ</h2>
+  <div class="faq rv"><details><summary>Does it cost anything?</summary><p>No, the app is free and ad-free.</p></details><details><summary>Where do my steps come from?</summary><p>Apple Health, no manual entry.</p></details><details><summary>Can I change my goal?</summary><p>Yes, 10,000 steps by default; the monthly goal is calculated for you.</p></details><details><summary>Which languages?</summary><p>English and French.</p></details></div>
+</div></section>
+
+<section class="final"><div class="wrap">
+  <h2 class="rv">Ready to keep the pace?</h2>
+  <div class="segs" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i></div>
+  <a class="btn" href="https://apps.apple.com/us/app/id6762572011">Download on the App Store<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div></section>
 </main>
-<footer>
+<footer><div class="wrap">
   <p><a href="https://apps.apple.com/us/app/id6762572011">App Store</a> · <a href="/en/privacy.html">Privacy</a> · <a href="mailto:dbellaiche@davisor.fr">Contact</a> · <a href="/fr/">Français</a></p>
   <p>Apple, App Store and Apple Health are trademarks of Apple Inc. Walkever is published by BELLASOR.</p>
-</footer>
-</div>
+</div></footer>
 </body>
 </html>
