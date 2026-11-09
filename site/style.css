@@ -12,7 +12,7 @@ h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.08;margin:0 0 20px;font-weig
 .sub{color:var(--mute);font-size:1.15rem;margin:0 0 32px}
 .btn{display:inline-block;background:var(--accent);color:#111;font-weight:800;padding:16px 28px;border-radius:14px;text-decoration:none}
 .btn:hover{filter:brightness(1.1)}
-.shot{width:100%;max-width:320px;display:block;margin:0 auto;border-radius:28px;border:1px solid var(--line)}
+.shot{width:100%;max-width:320px;height:auto;display:block;margin:0 auto;border-radius:28px;border:1px solid var(--line)}
 section{padding:56px 0;border-top:1px solid var(--line)}
 h2{font-size:1.7rem;margin:0 0 28px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -29,4 +29,4 @@ footer a{color:var(--mute)}
 .legal{max-width:680px;margin:0 auto;padding:40px 24px}
 @media(max-width:800px){.hero{grid-template-columns:1fr;gap:32px}.grid{grid-template-columns:1fr}.shots{grid-template-columns:repeat(2,1fr)}}
 
-.hero .shot{aspect-ratio:560/960;object-fit:cover;object-position:top}
+.hero .shot{aspect-ratio:560/900;height:auto;object-fit:cover;object-position:top}
