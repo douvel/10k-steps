@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://objectif-10k-pas.vercel.app/sitemap.xml
