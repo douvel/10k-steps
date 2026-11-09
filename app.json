@@ -26,7 +26,8 @@
       "permissions": [
         "android.permission.health.READ_STEPS",
         "android.permission.ACTIVITY_RECOGNITION"
-      ]
+      ],
+      "versionCode": 1
     },
     "plugins": [
       "expo-router",
@@ -36,7 +37,18 @@
           "isClinicalDataEnabled": false
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35
+          }
+        }
+      ]
     ],
     "scheme": "stepsobjective",
     "experiments": {
