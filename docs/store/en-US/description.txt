@@ -1,4 +1,4 @@
-You already walk. Objectif 10K Pas tells you whether you're on pace to hit your step goal, by day, by month and by year.
+You already walk. Walkever tells you whether you're on pace to hit your step goal, by day, by month and by year.
 
 AT A GLANCE
 • Today's steps in real time: the indicator turns green when you reach your goal.
@@ -17,4 +17,4 @@ SIMPLE AND RESPECTFUL
 • No data collected, no ads, free.
 • Available in English and French.
 
-Objectif 10K Pas uses Apple Health to read your steps. Your data stays on your iPhone.
+Walkever uses Apple Health to read your steps. Your data stays on your iPhone.

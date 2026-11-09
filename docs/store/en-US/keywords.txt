@@ -1,1 +1,1 @@
-pedometer,walking,health,counter,pace,average,healthkit,activity,habit,tracker,monthly,yearly
+pedometer,walking,counter,health,average,habit,monthly,yearly,activity,10000,daily

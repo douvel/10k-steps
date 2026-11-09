@@ -1,1 +1,1 @@
-podomètre,marche,santé,compteur,rythme,moyenne,healthkit,activité,habitude,suivi,mensuel,annuel
+compteur,marche,santé,objectif,habitude,suivi,mensuel,annuel,activité,moyenne,10000,avance,retard

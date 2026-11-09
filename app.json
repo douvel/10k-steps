@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "10k Steps",
+    "name": "Walkever",
     "slug": "10k-steps",
     "version": "1.1.2",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "fr.corpogames.10ksteps",
-      "buildNumber": "1.1.8",
+      "buildNumber": "1.1.9",
       "infoPlist": {
         "NSHealthShareUsageDescription": "This app reads your step data to show your daily and monthly progress.",
         "NSHealthUpdateUsageDescription": "This app does not modify your health data.",

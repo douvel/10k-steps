@@ -1,4 +1,4 @@
-# Calendrier de contenus — Objectif 10K Pas (4 semaines)
+# Calendrier de contenus — Walkever (4 semaines)
 
 Hypothèses : budget zéro, une personne, iPhone uniquement, français d'abord puis anglais, objectif = audience puis monétisation plus tard.
 Rythme : 3 publications par semaine (≈ 20 min chacune), recyclées sur plusieurs plateformes.
@@ -12,7 +12,7 @@ Preuves disponibles : moyenne requise par jour, avance ou retard cumulé, histor
 1. **TikTok / Instagram Reels / YouTube Shorts** : une seule vidéo verticale de 15–30 s, publiée sur les trois.
 2. **Reddit et communautés** (r/walking, r/fitness, groupes de marche ou de course FR) : valeur d'abord, lien en dernier, règles de chaque communauté lues avant de poster.
 3. **LinkedIn / X** : l'histoire du créateur (« j'ai fait l'app pour moi »), pour les premiers soutiens.
-4. **Le site** : liens vers https://objectif-10k-pas.vercel.app (mesure possible plus tard, voir « Mesure »).
+4. **Le site** : liens vers https://walkever.app (mesure possible plus tard, voir « Mesure »).
 
 ## Semaine 1 — Poser l'idée
 | Jour | Format | Accroche | Contenu | Appel à l'action |

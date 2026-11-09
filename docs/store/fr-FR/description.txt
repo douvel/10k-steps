@@ -1,4 +1,4 @@
-Tu marches déjà. Objectif 10K Pas te dit si tu es dans le rythme pour tenir ton objectif, sur le jour, le mois et l'année.
+Tu marches déjà. Walkever te dit si tu es dans le rythme pour tenir ton objectif, sur le jour, le mois et l'année.
 
 CE QUE TU VOIS EN UN COUP D'ŒIL
 • Tes pas du jour en temps réel : l'indicateur passe au vert quand l'objectif est atteint.
@@ -17,4 +17,4 @@ SIMPLE ET RESPECTUEUX
 • Aucune donnée collectée, aucune publicité, gratuit.
 • Disponible en français et en anglais.
 
-Objectif 10K Pas utilise l'app Santé d'Apple pour lire tes pas. Tes données restent sur ton iPhone.
+Walkever utilise l'app Santé d'Apple pour lire tes pas. Tes données restent sur ton iPhone.
