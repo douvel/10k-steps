@@ -4,7 +4,8 @@ body{margin:0;background:var(--bg);color:var(--text);font:17px/1.6 -apple-system
 a{color:var(--accent)}
 .wrap{max-width:1040px;margin:0 auto;padding:0 24px}
 header{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
-.brand{font-weight:800;letter-spacing:.02em}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em;color:var(--text);text-decoration:none}
+.brand img{border-radius:22%;display:block}
 .lang a{color:var(--mute);text-decoration:none;margin-left:12px}
 .lang a[aria-current]{color:var(--text);font-weight:700}
 .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding:40px 0 72px}

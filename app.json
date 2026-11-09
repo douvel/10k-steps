@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "fr.corpogames.10ksteps",
-      "buildNumber": "1.1.10",
+      "buildNumber": "1.1.11",
       "infoPlist": {
         "NSHealthShareUsageDescription": "This app reads your step data to show your daily and monthly progress.",
         "NSHealthUpdateUsageDescription": "This app does not modify your health data.",
