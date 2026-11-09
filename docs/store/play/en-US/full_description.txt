@@ -1,0 +1,20 @@
+You already walk. Walkever tells you whether you're on pace to hit your step goal, by day, by month and by year.
+
+AT A GLANCE
+• Today's steps in real time: the indicator turns green when you reach your goal.
+• Your monthly total, daily average and the steps still to go.
+• The daily average you need to finish the month on track, with or without today.
+• Your cumulative lead or lag against the ideal pace, with a progress bar that changes color.
+
+A HISTORY THAT TALKS
+• Your steps day by day, month by month and year by year.
+• Tap a day, a month or a year to see the exact total, the percentage of your goal and the daily average.
+• For the current year: how far ahead or behind your goal pace you are.
+
+SIMPLE AND RESPECTFUL
+• Your daily goal is customizable (10,000 steps by default); the monthly goal is calculated for you.
+• Reads your steps directly from Health Connect: no manual entry.
+• No data collected, no ads, free.
+• Available in English and French.
+
+Walkever uses Health Connect (read-only access to your step count) to display your progress. Your data stays on your phone.
