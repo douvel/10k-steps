@@ -211,7 +211,7 @@ page('steps', 'fr', '/fr/combien-de-pas-par-jour/',
           ("Combien de pas par jour à 70 ans ?", "Entre 4 000 et 7 500 pas par jour selon ta forme. Les études chez les personnes âgées montrent un bénéfice dès 4 400 pas et un plateau autour de 7 500."),
           ("Combien de pas par jour pour être en bonne santé ?", "Autour de 7 000 à 8 000 pas par jour pour la plupart des adultes, d'après les méta-analyses récentes. L'OMS recommande aussi 150 à 300 minutes d'activité modérée par semaine."),
           ("Combien de pas par jour pour être considéré comme sédentaire ?", "On parle souvent de mode de vie sédentaire en dessous d'environ 5 000 pas par jour. C'est là que chaque pas supplémentaire a le plus d'effet.")],
-     related=['pace', 'distance', 'compare'])
+     related=['pace', 'avg', 'distance'])
 
 page('steps', 'en', '/en/how-many-steps-a-day/',
      title='How Many Steps a Day? What Research Says (by Age)',
@@ -254,7 +254,7 @@ page('steps', 'en', '/en/how-many-steps-a-day/',
           ("How many steps a day is considered active?", "Around 7,500 to 10,000 steps a day is commonly described as active. Under about 5,000 is usually considered sedentary."),
           ("How many steps a day is healthy?", "About 7,000 to 8,000 steps a day for most adults, according to recent meta-analyses. The WHO also recommends 150 to 300 minutes of moderate activity per week."),
           ("How many steps a day for seniors?", "Between 4,000 and 7,500 steps a day depending on fitness. Studies in older adults show benefits from 4,400 steps and a plateau around 7,500.")],
-     related=['pace', 'distance', 'compare'])
+     related=['pace', 'avg', 'distance'])
 
 
 # ---------- 3. Monthly pace calculator
@@ -518,6 +518,129 @@ page('challenge', 'en', '/en/january-step-challenge/',
      related=['pace', 'steps'])
 
 
+# ---------- 5. Average steps per day (age / gender)
+SRC_AVG_FR = """<ol class="sources">
+<li>Paluch A.E. et al. « Daily steps and all-cause mortality: a meta-analysis of 15 international cohorts ». <i>The Lancet Public Health</i>, 2022.</li>
+<li>Ding D. et al. « Daily steps and health outcomes in adults: a systematic review and dose-response meta-analysis ». <i>The Lancet Public Health</i>, 2025.</li>
+<li>Althoff T. et al. « Large-scale physical activity data reveal worldwide activity inequality ». <i>Nature</i>, 2017.</li>
+<li>Bassett D.R. et al. « Pedometer-measured physical activity and health behaviors in U.S. adults ». <i>Medicine &amp; Science in Sports &amp; Exercise</i>, 2010.</li>
+<li>Tudor-Locke C. et al. « How many steps/day are enough? For adults ». <i>International Journal of Behavioral Nutrition and Physical Activity</i>, 2011.</li>
+</ol>"""
+SRC_AVG_EN = SRC_AVG_FR.replace('« ', '"').replace(' »', '"')
+
+
+def avg_table(lang):
+    fr = lang == 'fr'
+    n = lambda a, b: (f'{a:,} – {b:,}'.replace(',', ' ' if fr else ',') if fr else f'{a:,}–{b:,}'.replace(',', ','))
+    rows = [
+        ('20–29', (7000, 9500), '8 000 – 10 000' if fr else '8,000–10,000'),
+        ('30–39', (6500, 9000), '8 000 – 10 000' if fr else '8,000–10,000'),
+        ('40–49', (6000, 8500), '8 000 – 10 000' if fr else '8,000–10,000'),
+        ('50–59', (5500, 8000), '8 000 – 10 000' if fr else '8,000–10,000'),
+        ('60–69', (5000, 7500), '6 000 – 8 000' if fr else '6,000–8,000'),
+        ('70+', (3000, 6000), '6 000 – 8 000' if fr else '6,000–8,000'),
+    ]
+    if fr:
+        head = '<tr><th>Âge</th><th>Moyenne typique observée (pas/jour)</th><th>Zone de bénéfice maximal (Paluch 2022)</th></tr>'
+    else:
+        head = '<tr><th>Age</th><th>Typical observed average (steps/day)</th><th>Peak benefit range (Paluch 2022)</th></tr>'
+    body = ''.join(f'<tr><th scope="row">{a}</th><td>{n(*r)}</td><td>{z}</td></tr>' for a, r, z in rows)
+    return f'<div class="table-wrap"><table class="tbl"><thead>{head}</thead><tbody>{body}</tbody></table></div>'
+
+
+page('avg', 'fr', '/fr/moyenne-pas-par-jour/',
+     title='Moyenne de pas par jour : par âge, hommes, femmes',
+     h1='Moyenne de pas par jour : par âge, hommes, femmes',
+     desc="Quelle est la moyenne de pas par jour ? Repères par âge (20 à 70 ans et +), différences hommes/femmes et comparaison mondiale, sources à l'appui. Télécharge Walkever.",
+     ct_override='site-avg-fr',
+     answer="<p><b>Un adulte fait en moyenne 5 000 à 7 500 pas par jour</b> selon les pays et les études ; la moyenne mondiale mesurée par smartphone est d'environ 5 000. Au-dessus de 7 000 pas, tu fais mieux que la moyenne et tu es déjà dans la zone où le bénéfice santé est net. Les hommes marchent en général un peu plus que les femmes, et la moyenne baisse avec l'âge.</p>",
+     body=lambda: f"""
+<h2>Trois repères à retenir</h2>
+<ul>
+ <li><b>Sédentaire :</b> moins de 5 000 pas par jour. C'est la zone où chaque pas supplémentaire apporte le plus.</li>
+ <li><b>Adulte actif :</b> 7 500 à 10 000 pas par jour, soit la zone de bénéfice maximal avant 60 ans (8 000–10 000).</li>
+ <li><b>Senior :</b> 6 000 à 8 000 pas par jour suffisent à obtenir l'essentiel du bénéfice après 60 ans.</li>
+</ul>
+
+<h2>Moyenne de pas par jour selon l'âge</h2>
+<p>Les valeurs ci-dessous sont des <b>ordres de grandeur</b> : elles varient beaucoup selon le pays, la méthode de mesure (podomètre, smartphone, bracelet) et le niveau d'activité de l'échantillon. La colonne de droite n'est pas une moyenne : c'est la zone où le risque de mortalité cesse de baisser nettement, d'après la méta-analyse de Paluch (2022).</p>
+{avg_table('fr')}
+<p class="note">Fourchettes indicatives établies à partir de la synthèse de Tudor-Locke (2011) et des mesures par podomètre de Bassett (2010) ; elles ne constituent pas des médianes officielles par tranche d'âge.</p>
+
+<h2>Hommes et femmes : y a-t-il un écart ?</h2>
+<p>Dans la plupart des études, les hommes font un peu plus de pas que les femmes à âge égal, de l'ordre de quelques centaines de pas par jour. L'écart reste faible comparé à celui qui sépare les tranches d'âge ou les modes de vie (travail debout ou assis, ville ou campagne, voiture ou marche). Côté santé, le bénéfice des pas est similaire pour les deux sexes.</p>
+
+<h2>Et dans le monde ?</h2>
+<p>L'étude de Stanford (Althoff, 2017), menée sur 717 527 personnes dans 46 pays, donne une moyenne mondiale d'environ <b>4 961 pas par jour</b>. Hong Kong est en tête (≈ 6 880), les États-Unis sont à ≈ 4 774, l'Allemagne à ≈ 5 205 et le Royaume-Uni à ≈ 5 444. Les mesures par podomètre dans des échantillons plus actifs (Suisse, Australie) montent à près de 9 700 (Bassett, 2010).</p>
+
+<h2>Comment calculer ta moyenne personnelle</h2>
+<p>Additionne tes pas sur la période choisie et divise par le nombre de jours. Sur iPhone, l'app Santé affiche la moyenne sur 7 jours ou sur le mois. Pour savoir en plus combien de pas par jour il te reste à faire pour atteindre ton objectif, utilise le <a href="/fr/calculateur-objectif-pas/">calculateur d'objectif de pas mensuel</a>.</p>
+
+<h2>Pourquoi la moyenne du mois compte plus que le compteur du jour</h2>
+<p>Un jour à 4 000 pas ne dit presque rien : un week-end de randonnée le rattrape. Ce qui pèse sur la santé, c'est l'habitude répétée, donc la <b>moyenne sur plusieurs semaines</b>. Suivre le mois, c'est transformer un objectif flou en chiffre concret : « il me reste 8 200 pas par jour ». C'est exactement ce que calcule Walkever. Pour les seuils selon l'âge, lis le guide <a href="/fr/combien-de-pas-par-jour/">combien de pas par jour</a>.</p>
+
+<h2>Sources</h2>
+{SRC_AVG_FR}
+""",
+     faq=[("Quelle est la moyenne de pas par jour d'un Français ?",
+           "Il n'existe pas de chiffre officiel fiable. Les mesures par smartphone placent les grands pays d'Europe de l'Ouest autour de 5 000 à 5 500 pas par jour (Althoff, 2017) ; les adultes actifs dépassent 7 500."),
+          ("Quelle est la moyenne de pas par jour à 60 ans ?",
+           "Autour de 5 000 à 7 500 pas par jour, avec de grandes variations. Après 60 ans, le bénéfice santé se stabilise vers 6 000 à 8 000 pas (Paluch, 2022)."),
+          ("Combien de pas fait en moyenne une femme par jour ?",
+           "À âge égal, les femmes font en général quelques centaines de pas de moins que les hommes. Le bénéfice santé des pas est comparable chez les deux sexes."),
+          ("Comment calculer sa propre moyenne de pas mensuelle ?",
+           "Additionne tes pas du mois et divise par le nombre de jours écoulés. Walkever le fait automatiquement depuis l'app Santé et affiche aussi la moyenne requise pour finir le mois."),
+          ("7 000 ou 10 000 pas par jour : que dit la science ?",
+           "Le gain majeur se situe jusqu'à 7 000–8 000 pas. Au-delà, jusqu'à 10 000 avant 60 ans, le bénéfice continue de croître plus lentement (Paluch 2022, Ding 2025).")],
+     related=['steps', 'pace'])
+
+page('avg', 'en', '/en/average-steps-per-day/',
+     title='Average Steps per Day: by Age, Men and Women',
+     h1='Average steps per day: by age, men and women',
+     desc="What is the average number of steps per day? Benchmarks by age (20s to 70+), men vs women and a world comparison, with sources. Download Walkever.",
+     ct_override='site-avg-en',
+     answer="<p><b>The average adult takes 5,000 to 7,500 steps a day</b> depending on country and study; the worldwide average measured by smartphone is about 5,000. Above 7,000 steps you are ahead of the average and already in the range where the health benefit is clear. Men usually walk slightly more than women, and the average falls with age.</p>",
+     body=lambda: f"""
+<h2>Three benchmarks to remember</h2>
+<ul>
+ <li><b>Sedentary:</b> under 5,000 steps a day. This is where each extra step helps the most.</li>
+ <li><b>Active adult:</b> 7,500 to 10,000 steps a day, the peak-benefit range before age 60 (8,000–10,000).</li>
+ <li><b>Senior:</b> 6,000 to 8,000 steps a day gets most of the benefit after age 60.</li>
+</ul>
+
+<h2>Average steps per day by age</h2>
+<p>The values below are <b>orders of magnitude</b>: they vary a lot with country, measurement method (pedometer, phone, wristband) and how active the sample was. The right-hand column is not an average: it is the range where mortality risk stops falling sharply, from the Paluch (2022) meta-analysis.</p>
+{avg_table('en')}
+<p class="note">Indicative ranges drawn from the Tudor-Locke (2011) review and Bassett (2010) pedometer data; they are not official medians by age band.</p>
+
+<h2>Men and women: is there a gap?</h2>
+<p>In most studies men take slightly more steps than women of the same age, by a few hundred steps a day. The gap is small next to the difference between age groups or lifestyles (standing vs sitting work, city vs countryside, driving vs walking). For health, the benefit of steps is similar in both sexes.</p>
+
+<h2>And worldwide?</h2>
+<p>The Stanford study (Althoff, 2017), covering 717,527 people in 46 countries, found a worldwide average of about <b>4,961 steps a day</b>. Hong Kong leads (≈ 6,880); the US is at ≈ 4,774, Germany ≈ 5,205 and the UK ≈ 5,444. Pedometer studies in more active samples (Switzerland, Australia) reach nearly 9,700 (Bassett, 2010).</p>
+
+<h2>How to work out your own average</h2>
+<p>Add up your steps over the period and divide by the number of days. On iPhone, the Health app shows a 7-day or monthly average. To also see how many steps a day you still need to hit your goal, use the <a href="/en/step-goal-calculator/">monthly step goal calculator</a>.</p>
+
+<h2>Why the monthly average matters more than today's count</h2>
+<p>One 4,000-step day says almost nothing: a weekend hike makes up for it. What counts for health is the repeated habit, so the <b>average over several weeks</b>. Tracking the month turns a vague goal into a concrete number: "I need 8,200 steps a day from here." That is exactly what Walkever computes. For age-based thresholds, read the guide on <a href="/en/how-many-steps-a-day/">how many steps a day</a>.</p>
+
+<h2>Sources</h2>
+{SRC_AVG_EN}
+""",
+     faq=[("What is the average number of steps per day?",
+           "Roughly 5,000 steps worldwide (Althoff, 2017) and 5,000 to 7,500 for adults in most studies. Active adults exceed 7,500. Averages vary by country, age and measurement method."),
+          ("What is the average number of steps at age 60?",
+           "Around 5,000 to 7,500 steps a day, with wide variation. After 60, the health benefit levels off around 6,000 to 8,000 steps (Paluch, 2022)."),
+          ("How many steps does a woman take on average per day?",
+           "At the same age, women usually take a few hundred fewer steps a day than men. The health benefit of steps is comparable in both sexes."),
+          ("How do I calculate my own monthly step average?",
+           "Add up your steps for the month and divide by the days elapsed. Walkever does it automatically from Apple Health and also shows the average needed to finish the month."),
+          ("7,000 or 10,000 steps a day: what does science say?",
+           "Most of the gain comes up to 7,000–8,000 steps. Beyond that, up to 10,000 before age 60, benefit keeps rising more slowly (Paluch 2022, Ding 2025).")],
+     related=['steps', 'pace'])
+
+
 # ---------------------------------------------------------------- render
 L = {
     'fr': dict(home='Accueil', related='À lire aussi', promo_t='Walkever : ton rythme de pas, sans calcul',
@@ -538,6 +661,7 @@ SHORT = {  # link labels
     'steps': {'fr': 'Combien de pas par jour ?', 'en': 'How many steps a day?'},
     'pace': {'fr': "Calculateur d'objectif de pas mensuel", 'en': 'Monthly step goal calculator'},
     'compare': {'fr': 'Meilleure application podomètre iPhone', 'en': 'Best step counter app iPhone'},
+    'avg': {'fr': 'Moyenne de pas par jour', 'en': 'Average steps per day'},
     'challenge': {'fr': 'Défi 10 000 pas en janvier', 'en': 'January step challenge'},
 }
 
@@ -565,7 +689,7 @@ def render(p):
     related = ''.join(f'<li><a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a></li>' for k in p['related'])
     ld = [
         {"@context": "https://schema.org", "@type": "Article" if not p.get('tool') else "WebPage", "headline": p['h1'],
-         "description": p['desc'], "inLanguage": lang, "url": url, "dateModified": TODAY,
+         "description": p['desc'], "inLanguage": lang, "url": url, "datePublished": p.get('published', TODAY), "dateModified": TODAY,
          "author": {"@id": BASE + "/#org"}, "publisher": ORG, "image": BASE + f"/img/{lang}/1-dashboard.png"},
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Walkever", "item": BASE + home},
