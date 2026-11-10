@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
+# AI search and browsing bots — allowed; structured content also in /llms.txt
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
 Sitemap: https://www.walkever.app/sitemap.xml
