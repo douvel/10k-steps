@@ -24,8 +24,7 @@
       },
       "package": "fr.davisor.walkever",
       "permissions": [
-        "android.permission.health.READ_STEPS",
-        "android.permission.ACTIVITY_RECOGNITION"
+        "android.permission.health.READ_STEPS"
       ],
       "versionCode": 4
     },
