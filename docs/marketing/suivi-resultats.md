@@ -48,4 +48,4 @@ Rapport hebdomadaire à David chaque lundi. Sources : Google Search Console, Bin
 
 | Semaine | Pages indexées | Impressions GSC | Clics GSC | Position moy. | Clics App Store (ct=site-*) | Téléch. référents web | Changements |
 |---|---|---|---|---|---|---|---|
-| S0 (10 nov) | non mesuré | non branché | non branché | — | non mesuré (pt manquant) | non relevé | Audit + 6 pages + technique (voir seo-audit.md) |
+| S0 (10 nov) | 0 (site inconnu de Google) ; 10 découvertes via sitemap | GSC branchée le 10/11 | 0 | — | non mesuré (pt manquant) | non relevé | Audit + 6 pages + technique (voir seo-audit.md) |

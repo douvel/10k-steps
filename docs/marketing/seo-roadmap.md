@@ -12,9 +12,9 @@ Mise à jour : 2026-11-10. Mesure du succès : impressions et clics Search Conso
 ## Bloquant : besoin de David (une fois)
 | # | Action | Pourquoi |
 |---|---|---|
-| B1 | Créer la propriété **Domaine** `walkever.app` dans Google Search Console et me donner la valeur TXT de vérification (je l'ajoute moi-même dans le DNS Vercel) | Sans ça, aucune donnée d'impressions/clics, et pas de soumission du sitemap |
-| B2 | Me donner un accès en lecture : compte de service Google Cloud (gratuit) ajouté comme utilisateur « Restreint » de la propriété, clé JSON déposée dans le coffre Timon | Rapport hebdo automatique sans te solliciter |
-| B3 | Bing Webmaster Tools : importer la propriété depuis Search Console, générer une clé API → coffre | Bing alimente ChatGPT Search et Copilot |
+| ~~B1~~ | ✅ 10 nov : propriété Domaine `walkever.app` créée et validée (TXT DNS Vercel), sitemap lu (10 pages), indexation demandée pour les 8 pages | — |
+| ~~B2~~ | ✅ inutile : relevés faits via le navigateur Timon (session Google de David) | — |
+| B3 | Bing Webmaster Tools : connexion à faire par David (Get started → Se connecter avec Google → Importer depuis Search Console). En attendant, IndexNow couvre l'indexation Bing | Bing alimente ChatGPT Search et Copilot |
 | B4 | Récupérer le `pt` (provider token) dans App Store Connect → Analytics → Liens de campagne | Pour que les `ct=site-*` soient comptés |
 
 ## Semaines 1–2 (11 → 24 nov)
