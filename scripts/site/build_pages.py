@@ -352,7 +352,6 @@ def compare_table_fr():
 <tbody>
 <tr><th scope="row"><b>Walkever</b></th><td>✅ Oui</td><td>❌ Aucune</td><td>✅ Oui</td><td>Objectif mensuel + moyenne requise par jour</td></tr>
 <tr><th scope="row">Apple Santé (natif)</th><td>✅ Oui</td><td>❌ Aucune</td><td>✅ Natif</td><td>Comptage automatique, tendances hebdomadaires</td></tr>
-<tr><th scope="row">Steps – Fitness Tracker</th><td>Freemium</td><td>Oui (gratuit)</td><td>✅ Oui</td><td>Graphiques détaillés, streaks quotidiens</td></tr>
 <tr><th scope="row">Pedometer++</th><td>Freemium</td><td>Non</td><td>✅ Oui</td><td>Widgets, intégration Apple Watch</td></tr>
 </tbody>
 </table></div>"""
@@ -366,7 +365,6 @@ def compare_table_en():
 <tbody>
 <tr><th scope="row"><b>Walkever</b></th><td>✅ Yes</td><td>❌ None</td><td>✅ Yes</td><td>Monthly goal + required daily average</td></tr>
 <tr><th scope="row">Apple Health (built-in)</th><td>✅ Yes</td><td>❌ None</td><td>✅ Native</td><td>Automatic step counting, weekly trends</td></tr>
-<tr><th scope="row">Steps – Fitness Tracker</th><td>Freemium</td><td>Yes (free tier)</td><td>✅ Yes</td><td>Detailed charts, daily streaks</td></tr>
 <tr><th scope="row">Pedometer++</th><td>Freemium</td><td>No</td><td>✅ Yes</td><td>Widgets, Apple Watch integration</td></tr>
 </tbody>
 </table></div>"""
@@ -375,9 +373,9 @@ def compare_table_en():
 page('compare', 'fr', '/fr/meilleure-application-podometre-iphone/',
      title='Meilleure application podomètre iPhone gratuite sans publicité (2026)',
      h1='Meilleure application podomètre iPhone gratuite sans publicité',
-     desc="Comparatif honnête de 4 applications podomètre iPhone : Walkever, Apple Santé, Steps et Pedometer++. Gratuit, sans pub, avec HealthKit — lequel choisir ?",
+     desc="Comparatif honnête de 3 applications podomètre iPhone : Walkever, Apple Santé et Pedometer++. Gratuit, sans pub, avec HealthKit — lequel choisir ?",
      ct_override='site-compare-fr',
-     answer="<p>Pour un suivi fiable sans publicité, <b>quatre applications se distinguent sur iPhone</b> en 2026 : Walkever, Apple Santé (natif), Steps et Pedometer++. Le critère qui fait la différence : te dire si tu es dans les temps pour ton objectif du mois, pas seulement combien de pas tu as faits aujourd'hui.</p>",
+     answer="<p>Pour un suivi fiable sans publicité, <b>trois applications se distinguent sur iPhone</b> en 2026 : Walkever, Apple Santé (natif) et Pedometer++. Le critère qui fait la différence : te dire si tu es dans les temps pour ton objectif du mois, pas seulement combien de pas tu as faits aujourd'hui.</p>",
      body=lambda: f"""
 <h2>Critères de comparaison</h2>
 <p>Pour être utile au quotidien, une application podomètre doit répondre à trois questions : est-elle vraiment gratuite ? Affiche-t-elle de la publicité ? Lit-elle les pas depuis l'app Santé (HealthKit) sans dupliquer le comptage ? Voici les faits, sans opinion ni formulation dénigrant les concurrents.</p>
@@ -403,9 +401,9 @@ page('compare', 'fr', '/fr/meilleure-application-podometre-iphone/',
 page('compare', 'en', '/en/best-step-counter-app-iphone/',
      title='Best Free Step Counter App for iPhone Without Ads (2026)',
      h1='Best free step counter app for iPhone without ads',
-     desc="Honest comparison of 4 iPhone step counter apps: Walkever, Apple Health, Steps and Pedometer++. Free, no ads, HealthKit — which one to choose?",
+     desc="Honest comparison of 3 iPhone step counter apps: Walkever, Apple Health and Pedometer++. Free, no ads, HealthKit — which one to choose?",
      ct_override='site-compare-en',
-     answer="<p>For reliable, ad-free step tracking on iPhone, <b>four apps stand out in 2026</b>: Walkever, Apple Health (built-in), Steps and Pedometer++. The differentiator: does the app tell you whether you are on pace for your monthly goal, not just today's count?</p>",
+     answer="<p>For reliable, ad-free step tracking on iPhone, <b>three apps stand out in 2026</b>: Walkever, Apple Health (built-in) and Pedometer++. The differentiator: does the app tell you whether you are on pace for your monthly goal, not just today's count?</p>",
      body=lambda: f"""
 <h2>What we compared</h2>
 <p>A useful step counter app needs to answer three questions: is it really free? Does it show ads? Does it read steps from Apple Health (HealthKit) without double-counting? Here are the facts — no opinions, no disparaging competitors.</p>
