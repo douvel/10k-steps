@@ -415,6 +415,7 @@ def render(p):
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Walkever">
 <meta property="og:locale" content="{t['og_locale']}">
+<meta property="og:locale:alternate" content="{L['en' if lang == 'fr' else 'fr']['og_locale']}">
 <meta property="og:title" content="{html.escape(p['title'])}">
 <meta property="og:description" content="{html.escape(p['desc'])}">
 <meta property="og:url" content="{url}">
