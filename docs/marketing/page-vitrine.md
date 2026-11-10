@@ -1,6 +1,6 @@
 # Page web vitrine — plan
 
-Mise en œuvre technique : agent **10k-steps.dev** (non encore sollicité ; à faire après validation de David). Ici : structure et textes.
+Mise en œuvre technique : site en ligne sur https://www.walkever.app (refonte animée du 2026-11-10, voir en bas). Ici : structure et textes.
 
 ## Principes
 - Une seule page, rapide, bilingue (FR/EN, détection de langue du navigateur + sélecteur).
@@ -63,3 +63,20 @@ Mise en œuvre technique : agent **10k-steps.dev** (non encore sollicité ; à f
 - **Domaine : walkever.app** (acheté par David via Vercel, connecté au projet ; walkever.com pris). Aucune URL en dur dans `site/`, donc rien à changer côté code. L'ancienne URL objectif-10k-pas.vercel.app doit rediriger vers walkever.app (à vérifier dans Vercel). Si l'URL de politique de confidentialité enregistrée dans App Store Connect change, la mettre à jour en même temps que la fiche.
 - Le calendrier de contenus pointe maintenant vers https://walkever.app (content-calendar.md:15).
 - `<title>` FR/EN avec « Walkever » seul en tête ; ajouter « Podomètre » (FR) / « Step Goal Tracker » (EN) dans les `<title>` serait bénéfique au SEO web : à valider.
+
+## Refonte animée (2026-11-10) — en ligne sur walkever.app
+Fichiers : `site/fr/index.html`, `site/en/index.html`, `site/style.css`, `site/main.js` (HTML/CSS/JS statiques, aucune dépendance ni traceur).
+
+Structure réelle de la page (remplace la liste « Structure » ci-dessus pour les animations) :
+1. **Hero** : titre animé mot par mot, téléphone flottant qui s'incline avec la souris, deux pastilles (« 134 pas/j de retard », « 73 % de l'objectif », issues de la capture), trame de points en dérive, bouton App Store avec reflet.
+2. **Bandeau défilant** : Jour · Mois · Année · Avance · Retard · Rythme idéal · Objectif.
+3. **Le rythme** : courbe « Rythme idéal vs Toi » tracée au scroll.
+4. **3 cartes** : moyenne requise (10 370, compteur), avance/retard (barre qui cycle rouge → bleu → vert → or, couleurs de `getPaceState`), historique (barres qui poussent).
+5. **Aperçu** : 4 captures dans des cadres de téléphone, parallaxe au scroll.
+6. **Vie privée** : « 0 pub · 0 donnée collectée · 1 source ».
+7. **FAQ** animée, puis **CTA final** (barre de 10 segments qui se remplit, dernier segment or).
+- Barre de progression de scroll en haut, en 10 segments comme l'app.
+- `prefers-reduced-motion` coupe toutes les animations.
+- Honnêteté : les chiffres viennent des captures réelles ; les libellés de la carte avance/retard (« 3 600 pas de retard », « +1 200 pas d'avance ») sont des **illustrations**, pas des mesures.
+- Les HTML FR/EN ont été générés par un script temporaire : toute évolution se fait directement dans `site/`.
+- Reste à faire : ajouter le badge officiel « Download on the App Store » (le bouton est aujourd'hui textuel), valider « Podomètre » / « Step Goal Tracker » dans les `<title>` (déjà présent).
