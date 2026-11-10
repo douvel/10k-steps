@@ -5,7 +5,7 @@ Static output goes into site/ (served as-is by Vercel). Run: python3 scripts/sit
 Home pages (site/fr/index.html, site/en/index.html) are hand-written; this script only
 keeps their footer links in sync between the GUIDES markers.
 """
-import html, json, os, re, datetime
+import html, json, os, re, datetime, subprocess
 
 ROOT = os.path.join(os.path.dirname(__file__), '..', '..', 'site')
 BASE = 'https://www.walkever.app'
@@ -57,9 +57,9 @@ def strides_table(lang):
 
 
 page('distance', 'fr', '/fr/10000-pas-en-km/',
-     title='10 000 pas en km : convertisseur pas ↔ kilomètres selon ta taille',
+     title='10 000 pas en km — convertisseur selon ta taille',
      h1='10 000 pas, ça fait combien de km ?',
-     desc="10 000 pas font environ 7 km pour une personne de 170 cm. Convertisseur gratuit pas ↔ km selon ta taille, avec temps de marche et tableau 5 000 à 20 000 pas.",
+     desc="10 000 pas ≈ 7 km pour une personne de 170 cm. Calcule en ligne selon ta taille — pas, km, temps de marche. Télécharge Walkever sur l'App Store.",
      tool='sd',
      answer="<p><b>10 000 pas ≈ 7 km</b> pour une personne de 1,70 m (foulée d'environ 70 cm), soit 1 h 30 à 1 h 45 de marche. Plus tu es grand, plus ta foulée est longue : de 6,4 km à 1,55 m jusqu'à 7,7 km à 1,85 m.</p>",
      body=lambda: f"""
@@ -108,9 +108,9 @@ page('distance', 'fr', '/fr/10000-pas-en-km/',
      related=['steps', 'pace'])
 
 page('distance', 'en', '/en/steps-to-miles/',
-     title='Steps to Miles Calculator: How Far Is 10,000 Steps? (by height)',
+     title='Steps to Miles Calculator — How Far Is 10,000 Steps?',
      h1='Steps to miles: how far is 10,000 steps?',
-     desc="10,000 steps is about 4.4 miles (7 km) at 5′7″. Free steps to miles and km calculator by height, with walking time and a 5,000–20,000 steps chart.",
+     desc="10,000 steps ≈ 4.4 miles (7 km) at 5′7″. Free calculator by height — steps, miles, km and walking time. Download Walkever on the App Store.",
      tool='sd',
      answer="<p><b>10,000 steps ≈ 4.4 miles (7 km)</b> for someone 5′7″ (170 cm) with a stride of about 28 inches, which takes roughly 1 h 30 to 1 h 45 of walking. Taller people cover more ground: from about 4 miles at 5′1″ to 4.8 miles at 6′1″.</p>",
      body=lambda: f"""
@@ -171,9 +171,9 @@ SRC_FR = """<ol class="sources">
 SRC_EN = SRC_FR.replace('Organisation mondiale de la santé. Lignes directrices sur l\'activité physique et la sédentarité, 2020.', 'World Health Organization. Guidelines on physical activity and sedentary behaviour, 2020.').replace('« ', '"').replace(' »', '"')
 
 page('steps', 'fr', '/fr/combien-de-pas-par-jour/',
-     title='Combien de pas par jour ? Ce que dit vraiment la recherche (selon l\'âge)',
+     title='Combien de pas par jour ? Ce que dit la recherche',
      h1='Combien de pas par jour faut-il faire ?',
-     desc="10 000 pas par jour n'est pas une règle scientifique. Les études montrent un bénéfice net jusqu'à 7 000–8 000 pas, selon l'âge. Le point, sources à l'appui.",
+     desc="10 000 pas/j n'est pas une règle. Les études montrent un bénéfice jusqu'à 7 000–8 000 pas selon l'âge. Sources à l'appui. Télécharge Walkever.",
      answer="<p><b>Viser 7 000 à 10 000 pas par jour</b> est un bon objectif pour la plupart des adultes. Les grandes études montrent que le risque de mortalité baisse nettement jusqu'à environ 7 000–8 000 pas, puis se stabilise vers <b>6 000–8 000 pas après 60 ans</b> et <b>8 000–10 000 pas avant 60 ans</b>. Chaque pas en plus compte, surtout si tu pars de peu.</p>",
      body=lambda: """
 <h2>D'où vient le chiffre de 10 000 pas ?</h2>
@@ -214,9 +214,9 @@ page('steps', 'fr', '/fr/combien-de-pas-par-jour/',
      related=['pace', 'distance'])
 
 page('steps', 'en', '/en/how-many-steps-a-day/',
-     title='How Many Steps a Day Do You Really Need? What Research Says (by Age)',
+     title='How Many Steps a Day? What Research Says (by Age)',
      h1='How many steps a day should you walk?',
-     desc="10,000 steps a day is not a scientific rule. Large studies show benefits rise sharply up to 7,000–8,000 steps, then level off by age. Here is the evidence.",
+     desc="10,000 steps a day is not a scientific rule. Large studies show benefits up to 7,000–8,000 steps, by age. Evidence inside. Download Walkever.",
      answer="<p><b>Aim for 7,000 to 10,000 steps a day</b>, which is a solid target for most adults. Large studies show mortality risk drops sharply up to about 7,000–8,000 steps, then levels off around <b>6,000–8,000 steps after 60</b> and <b>8,000–10,000 steps under 60</b>. Every extra step counts, especially if you start low.</p>",
      body=lambda: """
 <h2>Where does 10,000 steps come from?</h2>
@@ -259,9 +259,9 @@ page('steps', 'en', '/en/how-many-steps-a-day/',
 
 # ---------- 3. Monthly pace calculator
 page('pace', 'fr', '/fr/calculateur-objectif-pas/',
-     title='Calculateur d\'objectif de pas : combien de pas par jour ce mois-ci ?',
+     title='Calculateur d\'objectif de pas mensuel',
      h1='Combien de pas par jour pour tenir ton objectif du mois ?',
-     desc="Calcule combien de pas par jour il te reste à faire pour atteindre ton objectif du mois, et ton avance ou ton retard. Gratuit, sans inscription.",
+     desc="Calcule combien de pas par jour il te reste à faire ce mois-ci, et ton avance ou ton retard. Gratuit, sans inscription. Essaie Walkever sur iPhone.",
      tool='mp',
      answer="<p>Entre ton objectif quotidien et les pas déjà faits ce mois-ci : le calculateur te donne <b>la moyenne requise par jour</b> pour finir le mois à temps, et ton <b>avance ou ton retard</b> sur le rythme idéal.</p>",
      body=lambda: """
@@ -301,9 +301,9 @@ page('pace', 'fr', '/fr/calculateur-objectif-pas/',
      related=['steps', 'distance'])
 
 page('pace', 'en', '/en/step-goal-calculator/',
-     title='Step Goal Calculator: How Many Steps a Day to Hit Your Monthly Goal?',
+     title='Step Goal Calculator — Daily Steps for Monthly Goal',
      h1='How many steps a day to hit your monthly goal?',
-     desc="Work out the daily step average you need to hit your monthly step goal, and how far ahead or behind the ideal pace you are. Free, no sign-up.",
+     desc="Work out the daily step average you need to hit your monthly step goal, and how far ahead or behind pace you are. Free, no sign-up. Try Walkever.",
      tool='mp',
      answer="<p>Enter your daily goal and the steps you have done this month: the calculator gives you <b>the daily average you need</b> to finish the month on track, and how far <b>ahead or behind</b> the ideal pace you are.</p>",
      body=lambda: """
@@ -415,11 +415,17 @@ def render(p):
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Walkever">
 <meta property="og:locale" content="{t['og_locale']}">
-<meta property="og:title" content="{html.escape(p['h1'])}">
+<meta property="og:title" content="{html.escape(p['title'])}">
 <meta property="og:description" content="{html.escape(p['desc'])}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{BASE}/img/{lang}/1-dashboard.png">
+<meta property="og:image" content="{BASE}/img/og/{lang}-{p['key']}.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{html.escape(p['h1'])} — Walkever">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{html.escape(p['title'])}">
+<meta name="twitter:description" content="{html.escape(p['desc'])}">
+<meta name="twitter:image" content="{BASE}/img/og/{lang}-{p['key']}.png">
 <link rel="stylesheet" href="/style.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/img/logo-32.png">
 <link rel="apple-touch-icon" href="/img/logo-180.png">
@@ -456,6 +462,32 @@ def write(path, content):
         f.write(content)
 
 
+def generate_webp(png_path):
+    """Generate a .webp alongside a .png using cwebp."""
+    webp_path = png_path[:-4] + '.webp'
+    if os.path.exists(webp_path) and os.path.getmtime(webp_path) >= os.path.getmtime(png_path):
+        return
+    try:
+        subprocess.run(['cwebp', '-q', '82', png_path, '-o', webp_path],
+                       check=True, capture_output=True)
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        print(f'Warning: cannot convert {os.path.basename(png_path)} to WebP — install cwebp (brew install webp). {e}')
+
+
+def _wrap_phone_imgs_webp(html_content):
+    """Wrap <div class="phone"><img .../img/.../X.png ...></div> with <picture>."""
+    def repl(m):
+        img = m.group(1)
+        src_m = re.search(r'src="(/img/[^"]+)\.png"', img)
+        if not src_m:
+            return m.group(0)
+        webp = src_m.group(1) + '.webp'
+        return f'<div class="phone"><picture><source type="image/webp" srcset="{webp}">{img}</picture></div>'
+    return re.sub(
+        r'<div class="phone">(<img\s[^>]*src="/img/(?:fr|en)/[^"]*\.png"[^>]*>)</div>',
+        repl, html_content)
+
+
 def main():
     for key, langs in PAGES.items():
         for p in langs.values():
@@ -469,6 +501,27 @@ def main():
         s2 = re.sub(r'<!--GUIDES-->.*?<!--/GUIDES-->', block, s, flags=re.S)
         if s2 != s:
             open(fp, 'w', encoding='utf-8').write(s2)
+
+    # H3: generate WebP variants for all app screenshots
+    for lang in ('fr', 'en'):
+        img_dir = os.path.join(ROOT, 'img', lang)
+        for name in ('1-dashboard', '2-days', '3-months', '4-years'):
+            png = os.path.join(img_dir, f'{name}.png')
+            if os.path.exists(png):
+                generate_webp(png)
+
+    # H2 + H3: inject preload and <picture> wrappers in hand-written home pages
+    for lang in ('fr', 'en'):
+        fp = os.path.join(ROOT, lang, 'index.html')
+        s = open(fp, encoding='utf-8').read()
+        # H2: <link rel="preload"> for LCP hero image (idempotent)
+        preload = f'<link rel="preload" as="image" href="/img/{lang}/1-dashboard.png" fetchpriority="high">'
+        if preload not in s:
+            s = s.replace('<link rel="stylesheet" href="/style.css">',
+                          f'{preload}\n<link rel="stylesheet" href="/style.css">')
+        # H3: wrap phone <img> elements with <picture> for WebP (idempotent)
+        s = _wrap_phone_imgs_webp(s)
+        open(fp, 'w', encoding='utf-8').write(s)
 
     # sitemap
     groups = [{'fr': '/fr/', 'en': '/en/'}, {'fr': '/fr/confidentialite.html', 'en': '/en/privacy.html'}]

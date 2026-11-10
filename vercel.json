@@ -3,5 +3,18 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": "site",
-  "cleanUrls": false
+  "cleanUrls": false,
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{"type": "header", "key": "accept-language", "value": "^fr"}],
+      "destination": "/fr/",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "destination": "/en/",
+      "permanent": false
+    }
+  ]
 }
