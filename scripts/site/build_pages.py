@@ -515,7 +515,9 @@ def main():
         fp = os.path.join(ROOT, lang, 'index.html')
         s = open(fp, encoding='utf-8').read()
         # H2: <link rel="preload"> for LCP hero image (idempotent)
-        preload = f'<link rel="preload" as="image" href="/img/{lang}/1-dashboard.png" fetchpriority="high">'
+        preload = f'<link rel="preload" as="image" href="/img/{lang}/1-dashboard.webp" type="image/webp" fetchpriority="high">'
+        old_preload = f'<link rel="preload" as="image" href="/img/{lang}/1-dashboard.png" fetchpriority="high">'
+        s = s.replace(old_preload + '\n', '')
         if preload not in s:
             s = s.replace('<link rel="stylesheet" href="/style.css">',
                           f'{preload}\n<link rel="stylesheet" href="/style.css">')
