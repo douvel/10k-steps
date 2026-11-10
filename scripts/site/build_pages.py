@@ -298,7 +298,7 @@ page('pace', 'fr', '/fr/calculateur-objectif-pas/',
           ("Faut-il compter aujourd'hui dans les jours restants ?", "Le matin, oui : tu as encore la journée devant toi. Le soir, mieux vaut exclure aujourd'hui pour voir ce qu'il faudra faire à partir de demain."),
           ("Combien de pas par mois pour 10 000 pas par jour ?", "Entre 280 000 (février) et 310 000 pas (mois de 31 jours). Sur un an, ça fait 3 650 000 pas."),
           ("Le calculateur enregistre-t-il mes données ?", "Non. Tout se calcule dans ton navigateur, rien n'est envoyé ni stocké.")],
-     related=['steps', 'distance', 'compare'])
+     related=['steps', 'distance', 'compare', 'challenge'])
 
 page('pace', 'en', '/en/step-goal-calculator/',
      title='Step Goal Calculator — Daily Steps for Monthly Goal',
@@ -340,7 +340,7 @@ page('pace', 'en', '/en/step-goal-calculator/',
           ("Should today count in the days left?", "In the morning, yes: you still have the day ahead. In the evening, exclude today to see what you need from tomorrow on."),
           ("How many steps a month is 10,000 a day?", "Between 280,000 (February) and 310,000 steps (31-day months). Over a year that is 3,650,000 steps."),
           ("Does the calculator store my data?", "No. Everything runs in your browser; nothing is sent or stored.")],
-     related=['steps', 'distance', 'compare'])
+     related=['steps', 'distance', 'compare', 'challenge'])
 
 
 # ---------- 4. Best step counter app (compare)
@@ -427,6 +427,97 @@ page('compare', 'en', '/en/best-step-counter-app-iphone/',
      related=['pace', 'steps'])
 
 
+# ---------- 5. January step challenge
+def plan_table(lang):
+    fr = lang == 'fr'
+    rows = [("1–7", 7, 70000), ("8–14", 7, 140000), ("15–21", 7, 210000), ("22–28", 7, 280000), ("29–31", 3, 310000)]
+    fmt = (lambda v: f'{v:,}'.replace(',', '\u202f')) if fr else (lambda v: f'{v:,}')
+    head = ('<th>Semaine</th><th>Jours</th><th>Pas visés</th><th>Cumul fin de période</th>' if fr
+            else '<th>Week</th><th>Days</th><th>Steps target</th><th>Running total</th>')
+    body = ''.join(f'<tr><th scope="row">{"Janvier" if fr else "Jan"} {d}</th><td>{n}</td><td>{fmt(n*10000)}</td><td>{fmt(c)}</td></tr>'
+                   for d, n, c in rows)
+    return f'<div class="table-wrap"><table class="tbl"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+
+
+page('challenge', 'fr', '/fr/defi-10000-pas-janvier/',
+     title='Défi 10 000 pas par jour en janvier : plan sur 31 jours',
+     h1='Défi 10 000 pas par jour en janvier : plan sur 31 jours',
+     desc="Relève le défi 10 000 pas par jour en janvier 2027 : 310 000 pas au total, un plan semaine par semaine, des conseils concrets et un suivi automatique.",
+     ct_override='site-defi-fr',
+     answer="<p>Faire 10 000 pas par jour en janvier 2027, c'est <b>310 000 pas sur 31 jours</b>, soit environ 225 km. Le plus simple : viser une <b>moyenne</b> plutôt qu'une série parfaite, répartir l'effort par semaine et vérifier chaque soir si tu es dans les temps.</p>",
+     body=lambda: f"""
+<h2>Pourquoi janvier</h2>
+<p>Les bonnes résolutions font de janvier le mois où l'on se remet à bouger. Le défi des 10 000 pas est simple à expliquer et se mesure tout seul grâce à l'app Santé de ton iPhone. Le piège classique : tout miser sur une série quotidienne sans jamais rater un jour. Dès le premier jour à 6 000 pas, la motivation chute. La parade est de raisonner sur le mois entier : 310 000 pas, et une moyenne à tenir.</p>
+
+<h2>Le plan semaine par semaine</h2>
+{plan_table('fr')}
+<h3>Semaine 1 (1–7 janvier) : installer l'habitude</h3>
+<p>Le 1er janvier tombe un vendredi : profite du week-end pour caler une marche de 45 minutes, le matin de préférence. Ajoute deux marches de 10 minutes après les repas en semaine. Si tu pars de 5 000 pas par jour, accepte de rester un peu en dessous cette semaine et compense plus tard.</p>
+<h3>Semaine 2 (8–14 janvier) : trouver ton rythme</h3>
+<p>Repère les créneaux qui reviennent chaque jour : trajet, pause déjeuner, appel téléphone à faire en marchant. Descends un arrêt plus tôt, prends les escaliers. Vise une journée « longue » le week-end (13 000 à 15 000 pas) pour absorber les jours de bureau.</p>
+<h3>Semaine 3 (15–21 janvier) : tenir quand la motivation baisse</h3>
+<p>C'est la semaine critique. Fixe ta marche à une heure précise, prépare tes affaires la veille. Un mauvais jour à 6 000 pas n'est pas grave : il demande environ 800 pas de plus par jour sur les cinq jours suivants.</p>
+<h3>Semaine 4 (22–28 janvier) : consolider</h3>
+<p>Tu as de l'avance ou du retard : regarde-le sans dramatiser. Une marche de 30 minutes représente environ 3 000 à 3 500 pas, de quoi rattraper un retard en un ou deux jours.</p>
+<h3>Derniers jours (29–31 janvier) : finir</h3>
+<p>Il reste trois jours. Calcule exactement ce qu'il te manque et répartis-le : c'est là que la moyenne requise est la plus utile.</p>
+
+<h2>Calcule ton défi</h2>
+<p>L'objectif total est <b>310 000 pas</b> (31 jours × 10 000). Dans notre <a href="/fr/calculateur-objectif-pas/">calculateur d'objectif de pas mensuel</a>, indique 10 000 pas par jour, les pas déjà faits et la date du jour : tu obtiens la moyenne requise pour finir le mois et ton avance ou ton retard. Pas assez de temps pour 10 000 ? Garde la même méthode avec 7 000 pas (217 000 sur le mois) : les études montrent déjà un bénéfice net à ce niveau, comme détaillé dans <a href="/fr/combien-de-pas-par-jour/">combien de pas par jour</a>.</p>
+
+<h2>Suivre le défi sans y penser</h2>
+<p>Walkever lit tes pas dans l'app Santé et affiche en continu ton total du mois, la moyenne requise et ton avance ou retard cumulé, avec une barre qui change de couleur selon ton rythme. Gratuit, sans publicité, aucune donnée collectée.</p>
+""",
+     faq=[("Comment faire 10 000 pas par jour en janvier ?",
+           "Répartis l'effort : une marche de 30 à 45 minutes, deux courtes marches après les repas, les escaliers et un trajet à pied. Vise la moyenne du mois plutôt qu'une série parfaite."),
+          ("Quel est l'objectif total de pas pour janvier ?",
+           "310 000 pas, soit 31 jours × 10 000. Si tu prends du retard, la moyenne requise sur les jours restants te dit exactement quoi rattraper."),
+          ("Combien de km représentent 310 000 pas ?",
+           "Environ 225 km pour une taille de 1,75 m, entre 200 et 240 km selon ta taille (pas d'environ 0,64 à 0,77 m)."),
+          ("Que faire si je rate une journée ?",
+           "Rien de dramatique : sur le mois, une journée à 5 000 pas se rattrape avec environ 500 pas en plus sur les dix jours suivants.")],
+     related=['pace', 'steps'])
+
+page('challenge', 'en', '/en/january-step-challenge/',
+     title='January Step Challenge: 10,000 Steps a Day (31-Day Plan)',
+     h1='January step challenge: 10,000 steps a day, 31-day plan',
+     desc="Take the 10,000 steps a day challenge in January 2027: 310,000 steps in total, a week-by-week plan, practical tips and automatic tracking.",
+     ct_override='site-defi-en',
+     answer="<p>Walking 10,000 steps a day in January 2027 means <b>310,000 steps over 31 days</b>, about 140 miles. The easiest way: aim for an <b>average</b> rather than a perfect streak, spread the effort by week and check each evening whether you are on pace.</p>",
+     body=lambda: f"""
+<h2>Why January</h2>
+<p>New Year resolutions make January the month people start moving again. The 10,000 steps challenge is easy to explain and tracks itself through Apple Health on your iPhone. The classic trap is betting everything on a daily streak with no missed day: one 6,000-step day and motivation drops. The fix is to think in months: 310,000 steps, and an average to hold.</p>
+
+<h2>The week-by-week plan</h2>
+{plan_table('en')}
+<h3>Week 1 (Jan 1–7): build the habit</h3>
+<p>January 1 falls on a Friday: use the weekend to lock in a 45-minute walk, ideally in the morning. Add two 10-minute walks after meals on weekdays. If you start from 5,000 steps a day, accept being a little under this week and make it up later.</p>
+<h3>Week 2 (Jan 8–14): find your rhythm</h3>
+<p>Spot the slots that come back every day: commute, lunch break, phone calls you can take on foot. Get off one stop early, take the stairs. Aim for one long day on the weekend (13,000 to 15,000 steps) to absorb desk days.</p>
+<h3>Week 3 (Jan 15–21): hold on when motivation dips</h3>
+<p>This is the critical week. Fix your walk at a set time and lay out your gear the night before. One bad 6,000-step day is not a problem: it costs about 800 extra steps a day over the next five.</p>
+<h3>Week 4 (Jan 22–28): consolidate</h3>
+<p>You are ahead or behind: look at it calmly. A 30-minute walk is roughly 3,000 to 3,500 steps, enough to recover a deficit in a day or two.</p>
+<h3>Final days (Jan 29–31): finish</h3>
+<p>Three days left. Work out exactly what is missing and split it: this is where the required daily average helps most.</p>
+
+<h2>Run your challenge numbers</h2>
+<p>The total target is <b>310,000 steps</b> (31 days × 10,000). In our <a href="/en/step-goal-calculator/">monthly step goal calculator</a>, enter 10,000 steps a day, the steps you have done and today's date: you get the average required to finish the month and your lead or lag. Not enough time for 10,000? Keep the same method with 7,000 steps (217,000 for the month): research already shows a clear benefit at that level, as covered in <a href="/en/how-many-steps-a-day/">how many steps a day</a>.</p>
+
+<h2>Track the challenge without thinking about it</h2>
+<p>Walkever reads your steps from Apple Health and continuously shows your month total, the required average and your cumulative lead or lag, with a bar that changes color with your pace. Free, no ads, no data collected.</p>
+""",
+     faq=[("How do I walk 10,000 steps a day in January?",
+           "Spread the effort: one 30 to 45 minute walk, two short walks after meals, stairs and a commute on foot. Aim for the monthly average rather than a perfect streak."),
+          ("What is the total step goal for January?",
+           "310,000 steps, which is 31 days × 10,000. If you fall behind, the required average over the remaining days tells you exactly what to make up."),
+          ("How many miles is 310,000 steps?",
+           "About 140 miles (225 km) at 5 ft 9 in, and between 124 and 148 miles depending on height (stride of roughly 2.1 to 2.5 ft)."),
+          ("What if I miss a day?",
+           "No drama: over a month, a 5,000-step day is made up with about 500 extra steps a day over the next ten.")],
+     related=['pace', 'steps'])
+
+
 # ---------------------------------------------------------------- render
 L = {
     'fr': dict(home='Accueil', related='À lire aussi', promo_t='Walkever : ton rythme de pas, sans calcul',
@@ -447,11 +538,12 @@ SHORT = {  # link labels
     'steps': {'fr': 'Combien de pas par jour ?', 'en': 'How many steps a day?'},
     'pace': {'fr': "Calculateur d'objectif de pas mensuel", 'en': 'Monthly step goal calculator'},
     'compare': {'fr': 'Meilleure application podomètre iPhone', 'en': 'Best step counter app iPhone'},
+    'challenge': {'fr': 'Défi 10 000 pas en janvier', 'en': 'January step challenge'},
 }
 
 
 def footer_links(lang):
-    return ' '.join(f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'distance', 'pace', 'compare'))
+    return ' '.join(f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'distance', 'pace', 'compare', 'challenge'))
 
 
 def footer(lang, other_href):
