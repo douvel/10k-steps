@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "fr.corpogames.steps10k",
+      "package": "fr.davisor.walkever",
       "permissions": [
         "android.permission.health.READ_STEPS",
         "android.permission.ACTIVITY_RECOGNITION"
