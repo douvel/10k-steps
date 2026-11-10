@@ -189,8 +189,8 @@ footer p{margin:6px 0}
 .doc .lead{margin-bottom:28px}
 .crumbs{font-size:.88rem;color:var(--mute);margin:0 0 18px}
 .crumbs a{color:var(--mute)}
-.answer{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:18px 22px;margin:24px 0}
-.answer p{margin:0;color:var(--text)}
+.answer{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0;margin:28px 0}
+.answer p{margin:0;color:var(--text);font-size:1.08rem}
 .tool{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:24px;margin:28px 0}
 .tool .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
 .tool label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.92rem;color:var(--mute)}
