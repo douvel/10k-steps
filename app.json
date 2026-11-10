@@ -27,7 +27,7 @@
         "android.permission.health.READ_STEPS",
         "android.permission.ACTIVITY_RECOGNITION"
       ],
-      "versionCode": 3
+      "versionCode": 4
     },
     "plugins": [
       "expo-router",
