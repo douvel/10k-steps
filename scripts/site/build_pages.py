@@ -666,8 +666,36 @@ SHORT = {  # link labels
 }
 
 
+HUB = {
+    'fr': dict(path='/fr/guides/', label='Guides', tools='Calculateurs',
+               title='Guides et calculateurs de pas : objectifs, moyennes, conversions | Walkever',
+               desc="Tous les guides Walkever : combien de pas par jour, moyenne selon l'âge, 10 000 pas en km, calculateur d'objectif mensuel, comparatif d'apps podomètre iPhone et défis.",
+               h1='Guides et calculateurs pour la marche',
+               intro="Des repères sourcés et des outils gratuits pour fixer un objectif de pas réaliste, le convertir en distance et le tenir sur le mois.",
+               sections=[('reperes', 'Repères : combien marcher', ['steps', 'avg']),
+                         ('outils', 'Calculateurs', ['pace', 'distance']),
+                         ('apps', 'Applis et défis', ['compare', 'challenge'])]),
+    'en': dict(path='/en/guides/', label='Guides', tools='Calculators',
+               title='Step guides and calculators: goals, averages, conversions | Walkever',
+               desc='All Walkever guides: how many steps a day, average steps by age, steps to miles, monthly step goal calculator, best iPhone step counter apps and challenges.',
+               h1='Walking guides and calculators',
+               intro='Sourced benchmarks and free tools to set a realistic step goal, turn it into distance and stay on pace all month.',
+               sections=[('benchmarks', 'Benchmarks: how much to walk', ['steps', 'avg']),
+                         ('tools', 'Calculators', ['pace', 'distance']),
+                         ('apps', 'Apps and challenges', ['compare', 'challenge'])]),
+}
+
+
+def menu(lang):
+    h = HUB[lang]
+    tools_anchor = h['sections'][1][0]
+    return (f'<span class="menu"><a href="{h["path"]}">{h["label"]}</a>'
+            f'<a href="{h["path"]}#{tools_anchor}">{h["tools"]}</a></span>')
+
+
 def footer_links(lang):
-    return ' '.join(f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'distance', 'pace', 'compare', 'challenge'))
+    return ' '.join([f'<a href="{HUB[lang]["path"]}">{"Tous les guides" if lang == "fr" else "All guides"}</a>'] +
+                    [f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'avg', 'distance', 'pace', 'compare', 'challenge')])
 
 
 def footer(lang, other_href):
@@ -693,7 +721,8 @@ def render(p):
          "author": {"@id": BASE + "/#org"}, "publisher": ORG, "image": BASE + f"/img/{lang}/1-dashboard.png"},
         {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Walkever", "item": BASE + home},
-            {"@type": "ListItem", "position": 2, "name": p['h1'], "item": url}]},
+            {"@type": "ListItem", "position": 2, "name": HUB[lang]['label'], "item": BASE + HUB[lang]['path']},
+            {"@type": "ListItem", "position": 3, "name": p['h1'], "item": url}]},
         {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in p['faq']]},
     ]
@@ -737,9 +766,9 @@ def render(p):
 </head>
 <body>
 <header><div class="wrap"><a class="brand" href="{home}"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
-<nav class="nav" aria-label="Navigation"><span class="lang"><a href="{PAGES[p['key']]['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{PAGES[p['key']]['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, ct + '-header')}">App Store</a></nav></div></header>
+<nav class="nav" aria-label="Navigation">{menu(lang)}<span class="lang"><a href="{PAGES[p['key']]['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{PAGES[p['key']]['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, ct + '-header')}">App Store</a></nav></div></header>
 <main class="doc">
-<p class="crumbs"><a href="{home}">Walkever</a> › {html.escape(SHORT[p['key']][lang])}</p>
+<p class="crumbs"><a href="{home}">Walkever</a> › <a href="{HUB[lang]['path']}">{HUB[lang]['label']}</a> › {html.escape(SHORT[p['key']][lang])}</p>
 <h1>{p['h1']}</h1>
 <div class="answer">{p['answer']}</div>
 {p['body']()}
@@ -749,6 +778,74 @@ def render(p):
 <h2>{t['related']}</h2>
 <ul class="related">{related}</ul>
 <p class="note">{t['updated']} {TODAY} · Walkever</p>
+</main>
+{footer(lang, other['path'])}
+</body>
+</html>
+"""
+
+
+def render_hub(lang):
+    h, t = HUB[lang], L[lang]
+    other = HUB['en' if lang == 'fr' else 'fr']
+    url = BASE + h['path']
+    home = f'/{lang}/'
+    secs, items = '', []
+    for sid, stitle, keys in h['sections']:
+        cards = ''
+        for k in keys:
+            p = PAGES[k][lang]
+            items.append(p)
+            cards += (f'<li><a href="{p["path"]}"><b>{html.escape(SHORT[k][lang])}</b>'
+                      f'<span>{html.escape(re.sub(r"\s*(Télécharge|Essaie|Download|Try) Walkever[^.]*\.$", "", p["desc"]))}</span></a></li>')
+        secs += f'<h2 id="{sid}">{html.escape(stitle)}</h2>\n<ul class="hub">{cards}</ul>\n'
+    ld = [
+        {"@context": "https://schema.org", "@type": "CollectionPage", "name": h['h1'], "description": h['desc'],
+         "inLanguage": lang, "url": url, "publisher": ORG,
+         "mainEntity": {"@type": "ItemList", "itemListElement": [
+             {"@type": "ListItem", "position": i + 1, "url": BASE + p['path'], "name": p['h1']} for i, p in enumerate(items)]}},
+        {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Walkever", "item": BASE + home},
+            {"@type": "ListItem", "position": 2, "name": h['label'], "item": url}]},
+    ]
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0b0f">
+<title>{html.escape(h['title'])}</title>
+<meta name="description" content="{html.escape(h['desc'])}">
+<link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="{lang}" href="{url}">
+<link rel="alternate" hreflang="{'en' if lang == 'fr' else 'fr'}" href="{BASE + other['path']}">
+<link rel="alternate" hreflang="x-default" href="{BASE + HUB['en']['path']}">
+<meta name="apple-itunes-app" content="app-id={APP_ID}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Walkever">
+<meta property="og:locale" content="{t['og_locale']}">
+<meta property="og:title" content="{html.escape(h['title'])}">
+<meta property="og:description" content="{html.escape(h['desc'])}">
+<meta property="og:url" content="{url}">
+<meta property="og:image" content="{BASE}/img/og/{lang}-home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{BASE}/img/og/{lang}-home.png">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/logo-32.png">
+<link rel="apple-touch-icon" href="/img/logo-180.png">
+{''.join(j(x) for x in ld)}
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="{home}"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
+<nav class="nav" aria-label="Navigation">{menu(lang).replace(f'href="{h["path"]}"', f'href="{h["path"]}" aria-current="page"', 1)}<span class="lang"><a href="{HUB['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{HUB['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, 'site-guides-header')}">App Store</a></nav></div></header>
+<main class="doc">
+<p class="crumbs"><a href="{home}">Walkever</a> › {h['label']}</p>
+<h1>{h['h1']}</h1>
+<p class="lead">{h['intro']}</p>
+{secs}
+<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>{t['promo_t']}</b><p>{t['promo_p']}</p><a class="btn sm" href="{store(lang, 'site-guides')}">{t['cta']}</a></div></aside>
 </main>
 {footer(lang, other['path'])}
 </body>
@@ -795,13 +892,20 @@ def main():
     for key, langs in PAGES.items():
         for p in langs.values():
             write(p['path'], render(p))
+    for lang in ('fr', 'en'):
+        write(HUB[lang]['path'], render_hub(lang))
 
-    # keep home footers in sync
+    # keep home footers + menu in sync
     for lang in ('fr', 'en'):
         fp = os.path.join(ROOT, lang, 'index.html')
         s = open(fp, encoding='utf-8').read()
         block = f'<!--GUIDES--><p class="links">{footer_links(lang)}</p><!--/GUIDES-->'
         s2 = re.sub(r'<!--GUIDES-->.*?<!--/GUIDES-->', block, s, flags=re.S)
+        mblock = f'<!--MENU-->{menu(lang)}<!--/MENU-->'
+        if '<!--MENU-->' in s2:
+            s2 = re.sub(r'<!--MENU-->.*?<!--/MENU-->', mblock, s2, flags=re.S)
+        else:
+            s2 = s2.replace('<nav class="nav" aria-label="Navigation">', '<nav class="nav" aria-label="Navigation">' + mblock, 1)
         if s2 != s:
             open(fp, 'w', encoding='utf-8').write(s2)
 
@@ -829,7 +933,8 @@ def main():
         open(fp, 'w', encoding='utf-8').write(s)
 
     # sitemap
-    groups = [{'fr': '/fr/', 'en': '/en/'}, {'fr': '/fr/confidentialite.html', 'en': '/en/privacy.html'}]
+    groups = [{'fr': '/fr/', 'en': '/en/'}, {'fr': HUB['fr']['path'], 'en': HUB['en']['path']},
+              {'fr': '/fr/confidentialite.html', 'en': '/en/privacy.html'}]
     groups += [{l: PAGES[k][l]['path'] for l in ('fr', 'en')} for k in PAGES]
     urls = []
     for g in groups:
@@ -850,7 +955,9 @@ def main():
              "- Privacy: no data collected, no analytics, no third-party tracking",
              "- Publisher: BELLASOR (France), contact@walkever.app", "",
              "## Pages"]
-    lines += [f"- [Walkever (English)]({BASE}/en/): product page", f"- [Walkever (français)]({BASE}/fr/): page produit"]
+    lines += [f"- [Walkever (English)]({BASE}/en/): product page", f"- [Walkever (français)]({BASE}/fr/): page produit",
+              f"- [{HUB['en']['h1']}]({BASE + HUB['en']['path']}): {HUB['en']['desc']}",
+              f"- [{HUB['fr']['h1']}]({BASE + HUB['fr']['path']}): {HUB['fr']['desc']}"]
     for k in PAGES:
         for l in ('en', 'fr'):
             p = PAGES[k][l]

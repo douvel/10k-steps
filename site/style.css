@@ -218,3 +218,15 @@ footer p{margin:6px 0}
 .sources li{color:var(--mute)}
 footer .links a{margin-right:14px}
 @media(max-width:560px){.promo{grid-template-columns:1fr}}
+/* menu + hub */
+.menu{display:flex;gap:18px}
+.menu a{color:var(--mute);text-decoration:none;font-weight:600;font-size:.95rem}
+.menu a:hover,.menu a[aria-current]{color:var(--text)}
+.hub{list-style:none;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.hub a{display:block;height:100%;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;text-decoration:none;color:var(--text)}
+.hub a:hover{border-color:var(--accent)}
+.hub b{display:block;margin-bottom:6px}
+.hub span{color:var(--mute);font-size:.92rem;line-height:1.5}
+@media(max-width:560px){.hub{grid-template-columns:1fr}.menu{gap:12px}.menu a,.lang a{font-size:.88rem}.lang a{margin-left:8px}.nav{gap:12px}}
+header .wrap{gap:16px}
+@media(max-width:420px){.menu a+a{display:none}}
