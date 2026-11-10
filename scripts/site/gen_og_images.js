@@ -117,6 +117,8 @@ const CONFIGS = [
   { key: 'en-steps',    logoSize: 200, variant: 'guide' },
   { key: 'fr-pace',     logoSize: 200, variant: 'guide' },
   { key: 'en-pace',     logoSize: 200, variant: 'guide' },
+  { key: 'fr-compare',  logoSize: 200, variant: 'guide' },
+  { key: 'en-compare',  logoSize: 200, variant: 'guide' },
   { key: 'fr-privacy',  logoSize: 160, variant: 'legal' },
   { key: 'en-privacy',  logoSize: 160, variant: 'legal' },
   { key: 'default',     logoSize: 200, variant: 'home'  },

@@ -211,7 +211,7 @@ page('steps', 'fr', '/fr/combien-de-pas-par-jour/',
           ("Combien de pas par jour à 70 ans ?", "Entre 4 000 et 7 500 pas par jour selon ta forme. Les études chez les personnes âgées montrent un bénéfice dès 4 400 pas et un plateau autour de 7 500."),
           ("Combien de pas par jour pour être en bonne santé ?", "Autour de 7 000 à 8 000 pas par jour pour la plupart des adultes, d'après les méta-analyses récentes. L'OMS recommande aussi 150 à 300 minutes d'activité modérée par semaine."),
           ("Combien de pas par jour pour être considéré comme sédentaire ?", "On parle souvent de mode de vie sédentaire en dessous d'environ 5 000 pas par jour. C'est là que chaque pas supplémentaire a le plus d'effet.")],
-     related=['pace', 'distance'])
+     related=['pace', 'distance', 'compare'])
 
 page('steps', 'en', '/en/how-many-steps-a-day/',
      title='How Many Steps a Day? What Research Says (by Age)',
@@ -254,7 +254,7 @@ page('steps', 'en', '/en/how-many-steps-a-day/',
           ("How many steps a day is considered active?", "Around 7,500 to 10,000 steps a day is commonly described as active. Under about 5,000 is usually considered sedentary."),
           ("How many steps a day is healthy?", "About 7,000 to 8,000 steps a day for most adults, according to recent meta-analyses. The WHO also recommends 150 to 300 minutes of moderate activity per week."),
           ("How many steps a day for seniors?", "Between 4,000 and 7,500 steps a day depending on fitness. Studies in older adults show benefits from 4,400 steps and a plateau around 7,500.")],
-     related=['pace', 'distance'])
+     related=['pace', 'distance', 'compare'])
 
 
 # ---------- 3. Monthly pace calculator
@@ -298,7 +298,7 @@ page('pace', 'fr', '/fr/calculateur-objectif-pas/',
           ("Faut-il compter aujourd'hui dans les jours restants ?", "Le matin, oui : tu as encore la journée devant toi. Le soir, mieux vaut exclure aujourd'hui pour voir ce qu'il faudra faire à partir de demain."),
           ("Combien de pas par mois pour 10 000 pas par jour ?", "Entre 280 000 (février) et 310 000 pas (mois de 31 jours). Sur un an, ça fait 3 650 000 pas."),
           ("Le calculateur enregistre-t-il mes données ?", "Non. Tout se calcule dans ton navigateur, rien n'est envoyé ni stocké.")],
-     related=['steps', 'distance'])
+     related=['steps', 'distance', 'compare'])
 
 page('pace', 'en', '/en/step-goal-calculator/',
      title='Step Goal Calculator — Daily Steps for Monthly Goal',
@@ -340,7 +340,94 @@ page('pace', 'en', '/en/step-goal-calculator/',
           ("Should today count in the days left?", "In the morning, yes: you still have the day ahead. In the evening, exclude today to see what you need from tomorrow on."),
           ("How many steps a month is 10,000 a day?", "Between 280,000 (February) and 310,000 steps (31-day months). Over a year that is 3,650,000 steps."),
           ("Does the calculator store my data?", "No. Everything runs in your browser; nothing is sent or stored.")],
-     related=['steps', 'distance'])
+     related=['steps', 'distance', 'compare'])
+
+
+# ---------- 4. Best step counter app (compare)
+def compare_table_fr():
+    return """<div class="table-wrap"><table class="tbl">
+<thead><tr>
+  <th>Application</th><th>Gratuit&nbsp;?</th><th>Publicités&nbsp;?</th><th>HealthKit&nbsp;?</th><th>Fonctionnalité clé</th>
+</tr></thead>
+<tbody>
+<tr><th scope="row"><b>Walkever</b></th><td>✅ Oui</td><td>❌ Aucune</td><td>✅ Oui</td><td>Objectif mensuel + moyenne requise par jour</td></tr>
+<tr><th scope="row">Apple Santé (natif)</th><td>✅ Oui</td><td>❌ Aucune</td><td>✅ Natif</td><td>Comptage automatique, tendances hebdomadaires</td></tr>
+<tr><th scope="row">Steps – Fitness Tracker</th><td>Freemium</td><td>Oui (gratuit)</td><td>✅ Oui</td><td>Graphiques détaillés, streaks quotidiens</td></tr>
+<tr><th scope="row">Pedometer++</th><td>Freemium</td><td>Non</td><td>✅ Oui</td><td>Widgets, intégration Apple Watch</td></tr>
+</tbody>
+</table></div>"""
+
+
+def compare_table_en():
+    return """<div class="table-wrap"><table class="tbl">
+<thead><tr>
+  <th>App</th><th>Free?</th><th>Ads?</th><th>HealthKit?</th><th>Key feature</th>
+</tr></thead>
+<tbody>
+<tr><th scope="row"><b>Walkever</b></th><td>✅ Yes</td><td>❌ None</td><td>✅ Yes</td><td>Monthly goal + required daily average</td></tr>
+<tr><th scope="row">Apple Health (built-in)</th><td>✅ Yes</td><td>❌ None</td><td>✅ Native</td><td>Automatic step counting, weekly trends</td></tr>
+<tr><th scope="row">Steps – Fitness Tracker</th><td>Freemium</td><td>Yes (free tier)</td><td>✅ Yes</td><td>Detailed charts, daily streaks</td></tr>
+<tr><th scope="row">Pedometer++</th><td>Freemium</td><td>No</td><td>✅ Yes</td><td>Widgets, Apple Watch integration</td></tr>
+</tbody>
+</table></div>"""
+
+
+page('compare', 'fr', '/fr/meilleure-application-podometre-iphone/',
+     title='Meilleure application podomètre iPhone gratuite sans publicité (2026)',
+     h1='Meilleure application podomètre iPhone gratuite sans publicité',
+     desc="Comparatif honnête de 4 applications podomètre iPhone : Walkever, Apple Santé, Steps et Pedometer++. Gratuit, sans pub, avec HealthKit — lequel choisir ?",
+     ct_override='site-compare-fr',
+     answer="<p>Pour un suivi fiable sans publicité, <b>quatre applications se distinguent sur iPhone</b> en 2026 : Walkever, Apple Santé (natif), Steps et Pedometer++. Le critère qui fait la différence : te dire si tu es dans les temps pour ton objectif du mois, pas seulement combien de pas tu as faits aujourd'hui.</p>",
+     body=lambda: f"""
+<h2>Critères de comparaison</h2>
+<p>Pour être utile au quotidien, une application podomètre doit répondre à trois questions : est-elle vraiment gratuite ? Affiche-t-elle de la publicité ? Lit-elle les pas depuis l'app Santé (HealthKit) sans dupliquer le comptage ? Voici les faits, sans opinion ni formulation dénigrant les concurrents.</p>
+{compare_table_fr()}
+
+<h2>Pourquoi Walkever si tu veux suivre un objectif mensuel</h2>
+<p>Apple Santé te dit combien de pas tu as faits. Walkever te dit si c'est assez. L'application calcule en temps réel combien de pas par jour il te reste à faire pour atteindre ton objectif à la fin du mois — avec ou sans aujourd'hui — et affiche ton avance ou ton retard cumulé. Aucune saisie manuelle, aucun compte à créer, aucune donnée quittant ton iPhone.</p>
+<p>Pour calculer ton rythme à la main, utilise notre <a href="/fr/calculateur-objectif-pas/">calculateur d'objectif de pas mensuel</a>. Pour savoir combien de pas viser selon ton âge, consulte notre guide <a href="/fr/combien-de-pas-par-jour/">combien de pas par jour</a>.</p>
+
+<h2>Apple Santé suffit-elle ?</h2>
+<p>Pour un comptage simple, oui. Apple Santé utilise l'accéléromètre de l'iPhone et affiche tes pas dans Santé › Activité. Elle montre une tendance hebdomadaire et une moyenne sur 7 jours. Ce qu'elle ne fait pas : calculer la moyenne requise pour finir ton mois dans les temps, ni afficher ton avance ou ton retard par rapport au rythme idéal.</p>
+""",
+     faq=[("Quelle est la meilleure application podomètre gratuite iPhone ?",
+           "Walkever si tu veux suivre un objectif mensuel sans publicité ni collecte de données. Apple Santé si tu veux un comptage automatique intégré à iOS. Les deux lisent HealthKit et sont entièrement gratuites."),
+          ("Quel podomètre ne collecte pas mes données ?",
+           "Walkever et Apple Santé n'envoient aucune donnée à des serveurs externes : tout reste sur ton iPhone. Consulte la politique de confidentialité de chaque app avant de l'installer."),
+          ("Peut-on changer l'objectif de pas sur iPhone ?",
+           "Oui. Dans Walkever, tu règles ton objectif directement dans l'application. Dans Apple Santé, l'objectif d'activité se configure depuis l'onglet Résumé. Les deux permettent de personnaliser la cible."),
+          ("Apple Santé compte-t-elle les pas automatiquement ?",
+           "Oui. Apple Santé utilise l'accéléromètre de l'iPhone pour compter les pas en permanence, sans configuration. Les données sont accessibles dans Santé › Activité › Pas.")],
+     related=['pace', 'steps'])
+
+page('compare', 'en', '/en/best-step-counter-app-iphone/',
+     title='Best Free Step Counter App for iPhone Without Ads (2026)',
+     h1='Best free step counter app for iPhone without ads',
+     desc="Honest comparison of 4 iPhone step counter apps: Walkever, Apple Health, Steps and Pedometer++. Free, no ads, HealthKit — which one to choose?",
+     ct_override='site-compare-en',
+     answer="<p>For reliable, ad-free step tracking on iPhone, <b>four apps stand out in 2026</b>: Walkever, Apple Health (built-in), Steps and Pedometer++. The differentiator: does the app tell you whether you are on pace for your monthly goal, not just today's count?</p>",
+     body=lambda: f"""
+<h2>What we compared</h2>
+<p>A useful step counter app needs to answer three questions: is it really free? Does it show ads? Does it read steps from Apple Health (HealthKit) without double-counting? Here are the facts — no opinions, no disparaging competitors.</p>
+{compare_table_en()}
+
+<h2>Why Walkever if you want to track a monthly step goal</h2>
+<p>Apple Health tells you how many steps you have taken. Walkever tells you whether that is enough. The app calculates in real time how many steps a day you still need to reach your goal by the end of the month — with or without today — and shows your cumulative lead or lag. No manual entry, no account required, no data leaving your iPhone.</p>
+<p>Want to run the numbers yourself first? Use our <a href="/en/step-goal-calculator/">monthly step goal calculator</a>. For science-based guidance on how many steps to aim for, read our guide on <a href="/en/how-many-steps-a-day/">how many steps a day</a>.</p>
+
+<h2>Is Apple Health enough?</h2>
+<p>For basic counting, yes. Apple Health uses the iPhone accelerometer and shows your steps under Health › Activity. It displays a weekly trend and a 7-day average. What it does not do: calculate the daily average you need to finish your month on track, or show how far ahead or behind your ideal pace you are.</p>
+""",
+     faq=[("What is the best free step counter app for iPhone?",
+           "Walkever if you want to track a monthly goal with no ads and no data collection. Apple Health if you just want automatic step counting built into iOS. Both read HealthKit and are completely free."),
+          ("Which pedometer app does not collect my data?",
+           "Walkever and Apple Health send no data to external servers — everything stays on your iPhone. Check each app's privacy policy before installing."),
+          ("Can I change my step goal on iPhone?",
+           "Yes. In Walkever you set your goal directly in the app. In Apple Health your activity goal is in the Summary tab. Both let you customise the target."),
+          ("Does Apple Health count steps automatically?",
+           "Yes. Apple Health uses the iPhone accelerometer to count steps continuously with no setup. The data is in Health › Activity › Steps.")],
+     related=['pace', 'steps'])
+
 
 # ---------------------------------------------------------------- render
 L = {
@@ -361,11 +448,12 @@ SHORT = {  # link labels
     'distance': {'fr': '10 000 pas en km : convertisseur', 'en': 'Steps to miles calculator'},
     'steps': {'fr': 'Combien de pas par jour ?', 'en': 'How many steps a day?'},
     'pace': {'fr': "Calculateur d'objectif de pas mensuel", 'en': 'Monthly step goal calculator'},
+    'compare': {'fr': 'Meilleure application podomètre iPhone', 'en': 'Best step counter app iPhone'},
 }
 
 
 def footer_links(lang):
-    return ' '.join(f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'distance', 'pace'))
+    return ' '.join(f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'distance', 'pace', 'compare'))
 
 
 def footer(lang, other_href):
@@ -382,7 +470,7 @@ def render(p):
     other = PAGES[p['key']]['en' if lang == 'fr' else 'fr']
     url = BASE + p['path']
     home = f'/{lang}/'
-    ct = 'site-' + p['key']
+    ct = p.get('ct_override') or ('site-' + p['key'])
     faq_html = ''.join(f'<details><summary>{html.escape(q)}</summary><p>{html.escape(a)}</p></details>' for q, a in p['faq'])
     related = ''.join(f'<li><a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a></li>' for k in p['related'])
     ld = [
