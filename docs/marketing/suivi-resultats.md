@@ -49,3 +49,32 @@ Rapport hebdomadaire à David chaque lundi. Sources : Google Search Console, Bin
 | Semaine | Pages indexées | Impressions GSC | Clics GSC | Position moy. | Clics App Store (ct=site-*) | Téléch. référents web | Changements |
 |---|---|---|---|---|---|---|---|
 | S0 (10 nov) | 0 (site inconnu de Google) ; 10 découvertes via sitemap | GSC branchée le 10/11 | 0 | — | non mesuré (pt manquant) | non relevé | Audit + 6 pages + technique (voir seo-audit.md) |
+| S1 (11–17 nov) | | | | | | | P1 comparaison app FR/EN · corrections M1–M8 H1–H2 |
+| S2 (18–24 nov) | | | | | | | P2 moyenne de pas FR/EN · WebP (H3) |
+| S3 (25 nov–1 déc) | | | | | | | P3 défi janvier FR/EN |
+| S4 (2–8 déc) | | | | | | | P4 objectif annuel FR/EN |
+| S5 (9–15 déc) | | | | | | | Màj llms.txt · 1er relevé GSC significatif |
+| S6–S7 (16–29 déc) | | | | | | | Contenu saisonnier bilan 2026 |
+
+### KPIs SEO cibles (à 3 mois)
+
+| Métrique | Cible J+30 | Cible J+90 | Source |
+|---|---|---|---|
+| Pages indexées | ≥ 8 | ≥ 14 | GSC → Index |
+| Impressions/sem | > 100 | > 1 000 | GSC |
+| Clics/sem | > 5 | > 50 | GSC |
+| Position moy. sur requêtes outil | < 30 | < 15 | GSC |
+| Clics App Store `ct=site-*`/sem | mesurable (pt= résolu) | > 5 | App Store Connect |
+| Téléchargements référents web/mois | 1er relevé | > 10 | App Store Connect |
+
+### Requêtes GSC à surveiller en priorité
+
+Les requêtes suivantes sont les plus susceptibles d'apparaître en premier (longue traîne, peu concurrencées) :
+
+| Requête | Page cible | Action si position > 20 |
+|---|---|---|
+| calculateur objectif pas mensuel | `/fr/calculateur-objectif-pas/` | Enrichir FAQ + H1 |
+| step goal calculator monthly | `/en/step-goal-calculator/` | Enrichir FAQ + H1 |
+| 10000 pas en calories | `/fr/10000-pas-en-km/` | Ajouter section dédiée |
+| meilleure application podometre iphone sans pub | `/fr/meilleure-application-podometre-iphone/` | Vérifier titre/H1 |
+| january step challenge calculator | `/en/january-step-challenge/` | Vérifier indexation (délai possible) |
