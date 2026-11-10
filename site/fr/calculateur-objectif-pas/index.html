@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0b0f">
+<title>Calculateur d&#x27;objectif de pas : combien de pas par jour ce mois-ci ?</title>
+<meta name="description" content="Calcule combien de pas par jour il te reste à faire pour atteindre ton objectif du mois, et ton avance ou ton retard. Gratuit, sans inscription.">
+<link rel="canonical" href="https://www.walkever.app/fr/calculateur-objectif-pas/">
+<link rel="alternate" hreflang="fr" href="https://www.walkever.app/fr/calculateur-objectif-pas/">
+<link rel="alternate" hreflang="en" href="https://www.walkever.app/en/step-goal-calculator/">
+<link rel="alternate" hreflang="x-default" href="https://www.walkever.app/en/step-goal-calculator/">
+<meta name="apple-itunes-app" content="app-id=6762572011">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Walkever">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Combien de pas par jour pour tenir ton objectif du mois ?">
+<meta property="og:description" content="Calcule combien de pas par jour il te reste à faire pour atteindre ton objectif du mois, et ton avance ou ton retard. Gratuit, sans inscription.">
+<meta property="og:url" content="https://www.walkever.app/fr/calculateur-objectif-pas/">
+<meta property="og:image" content="https://www.walkever.app/img/fr/1-dashboard.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" type="image/png" sizes="32x32" href="/img/logo-32.png">
+<link rel="apple-touch-icon" href="/img/logo-180.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","headline":"Combien de pas par jour pour tenir ton objectif du mois ?","description":"Calcule combien de pas par jour il te reste à faire pour atteindre ton objectif du mois, et ton avance ou ton retard. Gratuit, sans inscription.","inLanguage":"fr","url":"https://www.walkever.app/fr/calculateur-objectif-pas/","dateModified":"2026-11-10","author":{"@id":"https://www.walkever.app/#org"},"publisher":{"@type":"Organization","@id":"https://www.walkever.app/#org","name":"BELLASOR","url":"https://www.walkever.app/","email":"contact@walkever.app","logo":"https://www.walkever.app/img/logo-512.png"},"image":"https://www.walkever.app/img/fr/1-dashboard.png","mainEntity":{"@type":"WebApplication","name":"Combien de pas par jour pour tenir ton objectif du mois ?","applicationCategory":"HealthApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Walkever","item":"https://www.walkever.app/fr/"},{"@type":"ListItem","position":2,"name":"Combien de pas par jour pour tenir ton objectif du mois ?","item":"https://www.walkever.app/fr/calculateur-objectif-pas/"}]}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Quel objectif de pas mensuel choisir ?","acceptedAnswer":{"@type":"Answer","text":"Multiplie ton objectif quotidien par le nombre de jours du mois. Avec 8 000 pas par jour, ça fait 240 000 pas en novembre et 248 000 en décembre."}},{"@type":"Question","name":"Faut-il compter aujourd'hui dans les jours restants ?","acceptedAnswer":{"@type":"Answer","text":"Le matin, oui : tu as encore la journée devant toi. Le soir, mieux vaut exclure aujourd'hui pour voir ce qu'il faudra faire à partir de demain."}},{"@type":"Question","name":"Combien de pas par mois pour 10 000 pas par jour ?","acceptedAnswer":{"@type":"Answer","text":"Entre 280 000 (février) et 310 000 pas (mois de 31 jours). Sur un an, ça fait 3 650 000 pas."}},{"@type":"Question","name":"Le calculateur enregistre-t-il mes données ?","acceptedAnswer":{"@type":"Answer","text":"Non. Tout se calcule dans ton navigateur, rien n'est envoyé ni stocké."}}]}</script>
+<script src="/tools.js" defer></script>
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="/fr/"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
+<nav class="nav" aria-label="Navigation"><span class="lang"><a href="/fr/calculateur-objectif-pas/" hreflang="fr" aria-current="page">FR</a><a href="/en/step-goal-calculator/" hreflang="en">EN</a></span><a class="btn sm" href="https://apps.apple.com/fr/app/id6762572011?ct=site-pace-header&mt=8">App Store</a></nav></div></header>
+<main class="doc">
+<p class="crumbs"><a href="/fr/">Walkever</a> › Calculateur d&#x27;objectif de pas mensuel</p>
+<h1>Combien de pas par jour pour tenir ton objectif du mois ?</h1>
+<div class="answer"><p>Entre ton objectif quotidien et les pas déjà faits ce mois-ci : le calculateur te donne <b>la moyenne requise par jour</b> pour finir le mois à temps, et ton <b>avance ou ton retard</b> sur le rythme idéal.</p></div>
+
+<div class="tool" id="mp">
+ <div class="row">
+  <label>Objectif quotidien (pas)<input id="mp-g" type="number" inputmode="numeric" min="0" step="500" value="10000"></label>
+  <label>Pas déjà faits ce mois-ci<input id="mp-t" type="number" inputmode="numeric" min="0" step="1000" value="80000"></label>
+  <label>Date<input id="mp-d" type="date"></label>
+ </div>
+ <label class="chk"><input id="mp-x" type="checkbox"> Exclure aujourd'hui (commencer demain)</label>
+ <div class="out" aria-live="polite">
+  <div class="hl"><b id="mp-avg">–</b><small>pas/jour requis sur <span id="mp-days"></span></small></div>
+  <div><b id="mp-rest">–</b><small>pas restants</small></div>
+  <div><b id="mp-goal">–</b><small>objectif du mois</small></div>
+  <div><b id="mp-gap">–</b><small id="mp-gapl"></small></div>
+ </div>
+</div>
+<p class="note">Rien n'est envoyé : le calcul se fait dans ton navigateur.</p>
+
+<h2>Comment ça se calcule</h2>
+<ul>
+ <li><b>Objectif du mois</b> = objectif quotidien × nombre de jours du mois (310 000 pas en octobre à 10 000/jour, 300 000 en novembre).</li>
+ <li><b>Moyenne requise</b> = pas restants ÷ jours restants. Les jours restants incluent aujourd'hui, sauf si tu choisis de commencer demain.</li>
+ <li><b>Avance ou retard</b> = pas faits − objectif quotidien × jours déjà écoulés. Si tu es à 95 000 pas au matin du 10, tu as 5 000 pas d'avance sur un objectif de 10 000 par jour.</li>
+</ul>
+
+<h2>Pourquoi raisonner sur le mois</h2>
+<p>Un objectif quotidien fixe a un défaut : un seul jour raté et la série est cassée. Sur le mois, tu gardes la même exigence (la même moyenne), mais avec de la souplesse : une journée de bureau à 4 000 pas se rattrape par une randonnée le dimanche. Tu sais aussi tout de suite si le retard est sérieux ou non : 300 pas par jour à rattraper, c'est 3 minutes de marche.</p>
+
+<h2>Le faire sans calcul, tous les jours</h2>
+<p>Walkever fait ce calcul en continu à partir de l'app Santé de ton iPhone : moyenne requise (avec ou sans aujourd'hui), avance ou retard cumulé, barre de progression qui change de couleur selon ton rythme, et historique par jour, mois et année. Aucune saisie, aucun compte, aucune donnée collectée.</p>
+
+<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>Walkever : ton rythme de pas, sans calcul</b><p>Moyenne requise, avance ou retard, historique jour/mois/année. Gratuit, sans pub, aucune donnée collectée.</p><a class="btn sm" href="https://apps.apple.com/fr/app/id6762572011?ct=site-pace&mt=8">Télécharger sur l'App Store</a></div></aside>
+<h2>Questions fréquentes</h2>
+<div class="faq"><details><summary>Quel objectif de pas mensuel choisir ?</summary><p>Multiplie ton objectif quotidien par le nombre de jours du mois. Avec 8 000 pas par jour, ça fait 240 000 pas en novembre et 248 000 en décembre.</p></details><details><summary>Faut-il compter aujourd&#x27;hui dans les jours restants ?</summary><p>Le matin, oui : tu as encore la journée devant toi. Le soir, mieux vaut exclure aujourd&#x27;hui pour voir ce qu&#x27;il faudra faire à partir de demain.</p></details><details><summary>Combien de pas par mois pour 10 000 pas par jour ?</summary><p>Entre 280 000 (février) et 310 000 pas (mois de 31 jours). Sur un an, ça fait 3 650 000 pas.</p></details><details><summary>Le calculateur enregistre-t-il mes données ?</summary><p>Non. Tout se calcule dans ton navigateur, rien n&#x27;est envoyé ni stocké.</p></details></div>
+<h2>À lire aussi</h2>
+<ul class="related"><li><a href="/fr/combien-de-pas-par-jour/">Combien de pas par jour ?</a></li><li><a href="/fr/10000-pas-en-km/">10 000 pas en km : convertisseur</a></li></ul>
+<p class="note">Mis à jour le 2026-11-10 · Walkever</p>
+</main>
+<footer><div class="wrap">
+  <p class="links"><a href="/fr/combien-de-pas-par-jour/">Combien de pas par jour ?</a> <a href="/fr/10000-pas-en-km/">10 000 pas en km : convertisseur</a> <a href="/fr/calculateur-objectif-pas/">Calculateur d'objectif de pas mensuel</a></p>
+  <p><a href="https://apps.apple.com/fr/app/id6762572011?ct=site-footer&mt=8">App Store</a> · <a href="/fr/confidentialite.html">Confidentialité</a> · <a href="mailto:contact@walkever.app">Contact</a> · <a href="/en/step-goal-calculator/" hreflang="en">English</a></p>
+  <p>Apple, App Store et Apple Santé sont des marques d'Apple Inc. Walkever est édité par BELLASOR.</p>
+</div></footer>
+</body>
+</html>

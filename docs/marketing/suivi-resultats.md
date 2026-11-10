@@ -42,3 +42,10 @@ Aucune donnée n'est encore relevée : **tous les tableaux sont à remplir** à 
 | Date | Changement (fiche, contenu, canal) | Hypothèse | Résultat à J+14 |
 |---|---|---|---|
 | | | | |
+
+## 7. SEO — site walkever.app (agent SEO)
+Rapport hebdomadaire à David chaque lundi. Sources : Google Search Console, Bing Webmaster (dès vérification), App Store Connect (Référents web, campagnes `ct=site-*`).
+
+| Semaine | Pages indexées | Impressions GSC | Clics GSC | Position moy. | Clics App Store (ct=site-*) | Téléch. référents web | Changements |
+|---|---|---|---|---|---|---|---|
+| S0 (10 nov) | non mesuré | non branché | non branché | — | non mesuré (pt manquant) | non relevé | Audit + 6 pages + technique (voir seo-audit.md) |
