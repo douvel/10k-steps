@@ -27,4 +27,5 @@
 - [Défi 10 000 pas par jour en janvier : plan sur 31 jours](https://www.walkever.app/fr/defi-10000-pas-janvier/): Relève le défi 10 000 pas par jour en janvier 2027 : 310 000 pas au total, un plan semaine par semaine, des conseils concrets et un suivi automatique.
 - [Average steps per day: by age, men and women](https://www.walkever.app/en/average-steps-per-day/): What is the average number of steps per day? Benchmarks by age (20s to 70+), men vs women and a world comparison, with sources. Download Walkever.
 - [Moyenne de pas par jour : par âge, hommes, femmes](https://www.walkever.app/fr/moyenne-pas-par-jour/): Quelle est la moyenne de pas par jour ? Repères par âge (20 à 70 ans et +), différences hommes/femmes et comparaison mondiale, sources à l'appui. Télécharge Walkever.
-- [Privacy policy](https://www.walkever.app/en/privacy.html)
+- [Privacy policy](https://www.walkever.app/en/privacy)
+- [Politique de confidentialité](https://www.walkever.app/fr/confidentialite)

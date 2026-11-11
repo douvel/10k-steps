@@ -646,13 +646,13 @@ L = {
     'fr': dict(home='Accueil', related='À lire aussi', promo_t='Walkever : ton rythme de pas, sans calcul',
                promo_p="Moyenne requise, avance ou retard, historique jour/mois/année. Gratuit, sans pub, aucune donnée collectée.",
                cta="Télécharger sur l'App Store", faq='Questions fréquentes', updated='Mis à jour le',
-               privacy='/fr/confidentialite.html', privacy_l='Confidentialité', other='English',
+               privacy='/fr/confidentialite', privacy_l='Confidentialité', other='English',
                footnote="Apple, App Store et Apple Santé sont des marques d'Apple Inc. Walkever est édité par BELLASOR.",
                og_locale='fr_FR'),
     'en': dict(home='Home', related='Read next', promo_t='Walkever: your step pace, no math',
                promo_p="Required average, lead or lag, history by day/month/year. Free, no ads, no data collected.",
                cta='Download on the App Store', faq='FAQ', updated='Updated',
-               privacy='/en/privacy.html', privacy_l='Privacy', other='Français',
+               privacy='/en/privacy', privacy_l='Privacy', other='Français',
                footnote="Apple, App Store and Apple Health are trademarks of Apple Inc. Walkever is published by BELLASOR.",
                og_locale='en_US'),
 }
@@ -743,7 +743,7 @@ def render(p):
 <link rel="alternate" hreflang="{other['lang']}" href="{BASE + other['path']}">
 <link rel="alternate" hreflang="x-default" href="{BASE + PAGES[p['key']]['en']['path']}">
 <meta name="apple-itunes-app" content="app-id={APP_ID}">
-<meta property="og:type" content="article">
+<meta property="og:type" content="{'website' if p.get('tool') else 'article'}">
 <meta property="og:site_name" content="Walkever">
 <meta property="og:locale" content="{t['og_locale']}">
 <meta property="og:locale:alternate" content="{L['en' if lang == 'fr' else 'fr']['og_locale']}">
@@ -934,7 +934,7 @@ def main():
 
     # sitemap
     groups = [{'fr': '/fr/', 'en': '/en/'}, {'fr': HUB['fr']['path'], 'en': HUB['en']['path']},
-              {'fr': '/fr/confidentialite.html', 'en': '/en/privacy.html'}]
+              {'fr': '/fr/confidentialite', 'en': '/en/privacy'}]
     groups += [{l: PAGES[k][l]['path'] for l in ('fr', 'en')} for k in PAGES]
     urls = []
     for g in groups:
@@ -962,7 +962,7 @@ def main():
         for l in ('en', 'fr'):
             p = PAGES[k][l]
             lines.append(f"- [{p['h1']}]({BASE + p['path']}): {p['desc']}")
-    lines += [f"- [Privacy policy]({BASE}/en/privacy.html)", ""]
+    lines += [f"- [Privacy policy]({BASE}/en/privacy)", f"- [Politique de confidentialité]({BASE}/fr/confidentialite)", ""]
     write('/llms.txt', '\n'.join(lines))
 
 
