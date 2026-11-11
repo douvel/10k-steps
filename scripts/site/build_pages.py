@@ -900,7 +900,7 @@ def render(p):
 </head>
 <body>
 <header><div class="wrap"><a class="brand" href="{home}"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
-<nav class="nav" aria-label="Navigation">{menu(lang)}<span class="lang"><a href="{PAGES[p['key']]['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{PAGES[p['key']]['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, ct + '-header')}">App Store</a></nav></div></header>
+<nav class="nav" aria-label="Navigation">{menu(lang)}<span class="lang"><a href="{PAGES[p['key']]['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{PAGES[p['key']]['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, ct + '-header')}">App Store</a><a class="btn sm alt" href="{play(lang, ct + '-header')}">Google Play</a></nav></div></header>
 <main class="doc">
 <p class="crumbs"><a href="{home}">Walkever</a> › <a href="{HUB[lang]['path']}">{HUB[lang]['label']}</a> › {html.escape(SHORT[p['key']][lang])}</p>
 <h1>{p['h1']}</h1>
@@ -973,7 +973,7 @@ def render_hub(lang):
 </head>
 <body>
 <header><div class="wrap"><a class="brand" href="{home}"><img src="/img/logo-64.png" width="36" height="36" alt="">Walkever</a>
-<nav class="nav" aria-label="Navigation">{menu(lang).replace(f'href="{h["path"]}"', f'href="{h["path"]}" aria-current="page"', 1)}<span class="lang"><a href="{HUB['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{HUB['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, 'site-guides-header')}">App Store</a></nav></div></header>
+<nav class="nav" aria-label="Navigation">{menu(lang).replace(f'href="{h["path"]}"', f'href="{h["path"]}" aria-current="page"', 1)}<span class="lang"><a href="{HUB['fr']['path']}" hreflang="fr"{' aria-current="page"' if lang=='fr' else ''}>FR</a><a href="{HUB['en']['path']}" hreflang="en"{' aria-current="page"' if lang=='en' else ''}>EN</a></span><a class="btn sm" href="{store(lang, 'site-guides-header')}">App Store</a><a class="btn sm alt" href="{play(lang, 'site-guides-header')}">Google Play</a></nav></div></header>
 <main class="doc">
 <p class="crumbs"><a href="{home}">Walkever</a> › {h['label']}</p>
 <h1>{h['h1']}</h1>
