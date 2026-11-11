@@ -47,4 +47,32 @@ if(mp){
   }
   mp.addEventListener('input',run);mp.addEventListener('change',run);run();
 }
+
+// Annual step goal
+var ap=$('ap');
+if(ap){
+  var d2=new Date();$('ap-d').value=d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
+  function runAp(){
+    var goal=Math.max(0,parseFloat($('ap-g').value)||0),done=Math.max(0,parseFloat($('ap-t').value)||0);
+    var p=($('ap-d').value||'').split('-');if(p.length<3)return;
+    var y=+p[0],m=+p[1],day=+p[2];
+    var diy=(new Date(y,1,29).getDate()===29)?366:365;
+    var jan1=new Date(y,0,1),cur=new Date(y,m-1,day);
+    var elapsed=Math.round((cur-jan1)/86400000)+1;
+    var excl=$('ap-x').checked,left=diy-elapsed+1-(excl?1:0);
+    var target=goal*diy,rest=Math.max(0,target-done);
+    $('ap-goal').textContent=steps(target);
+    $('ap-rest').textContent=steps(rest);
+    $('ap-avg').textContent=rest===0?(fr?'Atteint !':'Done!'):left>0?steps(rest/left):'–';
+    var wk=Math.ceil(Math.max(0,left)/7);
+    $('ap-wk').textContent=wk;
+    $('ap-wkl').textContent=fr?(wk>1?'semaines restantes':'semaine restante'):(wk===1?'week left':'weeks left');
+    $('ap-days').textContent=fr?(left+(left>1?' jours':' jour')+(excl?' (à partir de demain)':' (incluant aujourd\'hui)')):(left+(left===1?' day':' days')+(excl?' (from tomorrow)':' (including today)'));
+    var gap=done-goal*(elapsed-1);
+    $('ap-gap').textContent=(gap>=0?'+':'')+steps(gap);
+    $('ap-gapl').textContent=fr?(gap>=0?'pas d\'avance (fin d\'hier)':'pas de retard (fin d\'hier)'):(gap>=0?'steps ahead (end of yesterday)':'steps behind (end of yesterday)');
+    $('ap-x').parentNode.style.display=diy-elapsed+1===1?'none':'';
+  }
+  ap.addEventListener('input',runAp);ap.addEventListener('change',runAp);runAp();
+}
 })();

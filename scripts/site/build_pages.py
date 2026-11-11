@@ -476,7 +476,7 @@ page('challenge', 'fr', '/fr/defi-10000-pas-janvier/',
            "Environ 225 km pour une taille de 1,75 m, entre 200 et 240 km selon ta taille (pas d'environ 0,64 à 0,77 m)."),
           ("Que faire si je rate une journée ?",
            "Rien de dramatique : sur le mois, une journée à 5 000 pas se rattrape avec environ 500 pas en plus sur les dix jours suivants.")],
-     related=['pace', 'steps'])
+     related=['pace', 'steps', 'annual'])
 
 page('challenge', 'en', '/en/january-step-challenge/',
      title='January Step Challenge: 10,000 Steps a Day (31-Day Plan)',
@@ -484,6 +484,7 @@ page('challenge', 'en', '/en/january-step-challenge/',
      desc="Take the 10,000 steps a day challenge in January 2027: 310,000 steps in total, a week-by-week plan, practical tips and automatic tracking.",
      ct_override='site-defi-en',
      answer="<p>Walking 10,000 steps a day in January 2027 means <b>310,000 steps over 31 days</b>, about 140 miles. The easiest way: aim for an <b>average</b> rather than a perfect streak, spread the effort by week and check each evening whether you are on pace.</p>",
+
      body=lambda: f"""
 <h2>Why January</h2>
 <p>New Year resolutions make January the month people start moving again. The 10,000 steps challenge is easy to explain and tracks itself through Apple Health on your iPhone. The classic trap is betting everything on a daily streak with no missed day: one 6,000-step day and motivation drops. The fix is to think in months: 310,000 steps, and an average to hold.</p>
@@ -515,7 +516,135 @@ page('challenge', 'en', '/en/january-step-challenge/',
            "About 140 miles (225 km) at 5 ft 9 in, and between 124 and 148 miles depending on height (stride of roughly 2.1 to 2.5 ft)."),
           ("What if I miss a day?",
            "No drama: over a month, a 5,000-step day is made up with about 500 extra steps a day over the next ten.")],
-     related=['pace', 'steps'])
+     related=['pace', 'steps', 'annual'])
+
+
+
+# ---------- 6. Annual step goal calculator
+def annual_ref_table(lang):
+    fr = lang == 'fr'
+    year = int(TODAY[:4])
+    diy = 366 if (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 365
+    def fv(v):
+        return f'{v:,}'.replace(',', ' ' if fr else ',')
+    def fkm(steps_count):
+        km = round(steps_count * 0.70 / 1000)
+        return fv(km) + ' km'
+    def fcal(steps_count):
+        cal = round(steps_count * 0.04 / 1000) * 1000
+        return fv(cal) + ' kcal'
+    goals = [7000, 8000, 10000, 12000]
+    if fr:
+        head = f'<tr><th>Objectif / jour</th><th>Total {year} ({diy} j)</th><th>Distance est.</th><th>Calories est.</th></tr>'
+    else:
+        head = f'<tr><th>Daily goal</th><th>{year} total ({diy} days)</th><th>Est. distance</th><th>Est. calories</th></tr>'
+    body = ''
+    for g in goals:
+        total = g * diy
+        lab = fv(g) + (' pas/j' if fr else ' steps/d')
+        body += f'<tr><th scope="row">{lab}</th><td>{fv(total)}</td><td>{fkm(total)}</td><td>{fcal(total)}</td></tr>'
+    return f'<div class="table-wrap"><table class="tbl"><thead>{head}</thead><tbody>{body}</tbody></table></div>'
+
+
+page('annual', 'fr', '/fr/objectif-annuel-pas/',
+     title="Calculateur d'objectif annuel de pas",
+     h1="Calculateur d'objectif annuel de pas",
+     desc="Calcule en ligne ton total annuel de pas, les semaines restantes et la moyenne requise pour tenir ton objectif. Tableau de référence de 7 000 à 12 000 pas/jour. Télécharge Walkever.",
+     tool='ap',
+     ct_override='site-annual-fr',
+     answer="<p>Entre ton objectif quotidien et les pas déjà faits cette année : le calculateur te donne <b>ton total annuel visé</b>, <b>la moyenne requise par jour</b> pour finir l'année à temps, et ton <b>avance ou ton retard</b> sur le rythme idéal.</p>",
+     body=lambda: f"""
+<div class="tool" id="ap">
+ <div class="row">
+  <label>Objectif quotidien (pas)<input id="ap-g" type="number" inputmode="numeric" min="0" step="500" value="10000"></label>
+  <label>Pas déjà faits cette année<input id="ap-t" type="number" inputmode="numeric" min="0" step="100000" value="2500000"></label>
+  <label>Date<input id="ap-d" type="date"></label>
+ </div>
+ <label class="chk"><input id="ap-x" type="checkbox"> Exclure aujourd'hui (commencer demain)</label>
+ <div class="out" aria-live="polite">
+  <div class="hl"><b id="ap-avg">–</b><small>pas/jour requis sur <span id="ap-days"></span></small></div>
+  <div><b id="ap-wk">–</b><small id="ap-wkl"></small></div>
+  <div><b id="ap-rest">–</b><small>pas restants</small></div>
+  <div><b id="ap-goal">–</b><small>objectif de l'année</small></div>
+  <div><b id="ap-gap">–</b><small id="ap-gapl"></small></div>
+ </div>
+</div>
+<p class="note">Rien n'est envoyé : le calcul se fait dans ton navigateur.</p>
+
+<h2>Tableau de référence</h2>
+<p>Combien de pas, de kilomètres et de calories selon ton objectif journalier sur une année complète (estimation à 70 cm de foulée et 0,04 kcal/pas pour une personne de 70 kg) :</p>
+{annual_ref_table('fr')}
+<p class="note">Les calories sont une estimation indicative : elles varient selon le poids, la taille, l'allure et le terrain. Consulte un professionnel de santé pour un suivi personnalisé.</p>
+
+<h2>Comment ça se calcule</h2>
+<ul>
+ <li><b>Objectif de l'année</b> = objectif quotidien × nombre de jours dans l'année (365 ou 366 en année bissextile).</li>
+ <li><b>Moyenne requise</b> = pas restants ÷ jours restants dans l'année. Les jours restants incluent aujourd'hui, sauf si tu coches l'option "commencer demain".</li>
+ <li><b>Avance ou retard</b> = pas faits − objectif quotidien × jours déjà écoulés depuis le 1er janvier.</li>
+</ul>
+
+<h2>Bilan {int(TODAY[:4])} : où en es-tu ?</h2>
+<p>En fin d'année, l'écran Historique de Walkever affiche ton cumul depuis le 1er janvier : total de pas, nombre de mois au-dessus de l'objectif et record journalier. Entre tes données dans le calculateur ci-dessus pour voir exactement ce qu'il te reste d'ici le 31 décembre, puis fixe ton objectif {int(TODAY[:4]) + 1} en t'appuyant sur ta vraie moyenne annuelle. Pour tenir un objectif mensuel en parallèle, utilise le <a href="/fr/calculateur-objectif-pas/">calculateur d'objectif de pas mensuel</a>.</p>
+""",
+     faq=[("Quel est l'objectif total de pas pour une année entière ?",
+           "À 10 000 pas par jour, le total annuel est de 3 650 000 pas sur 365 jours (ou 3 660 000 en année bissextile), soit environ 2 555 km et 146 000 kcal."),
+          ("Comment calculer sa moyenne annuelle de pas ?",
+           "Additionne tous tes pas depuis le 1er janvier et divise par le nombre de jours écoulés. Walkever le fait automatiquement depuis l'app Santé et affiche aussi la moyenne requise pour finir l'année."),
+          ("Combien de km représentent 10 000 pas par jour sur un an ?",
+           "Environ 2 555 km pour une année de 365 jours, avec une foulée de 70 cm (taille ≈ 1,70 m). Entre 2 190 km à 7 000 pas/jour et 3 065 km à 12 000 pas/jour."),
+          ("Le calculateur enregistre-t-il mes données ?",
+           "Non. Tout se calcule dans ton navigateur, rien n'est envoyé ni stocké.")],
+     related=['pace', 'challenge'])
+
+page('annual', 'en', '/en/annual-step-goal/',
+     title='Annual Step Goal Calculator',
+     h1='Annual step goal calculator',
+     desc="Calculate your yearly step total, weeks remaining and the daily average you need online. Reference table from 7,000 to 12,000 steps a day. Download Walkever.",
+     tool='ap',
+     ct_override='site-annual-en',
+     answer="<p>Enter your daily goal and the steps you have done this year: the calculator gives you <b>your annual target</b>, <b>the daily average you need</b> to finish the year on track, and how far <b>ahead or behind</b> the ideal pace you are.</p>",
+     body=lambda: f"""
+<div class="tool" id="ap">
+ <div class="row">
+  <label>Daily goal (steps)<input id="ap-g" type="number" inputmode="numeric" min="0" step="500" value="10000"></label>
+  <label>Steps done this year<input id="ap-t" type="number" inputmode="numeric" min="0" step="100000" value="2500000"></label>
+  <label>Date<input id="ap-d" type="date"></label>
+ </div>
+ <label class="chk"><input id="ap-x" type="checkbox"> Exclude today (start tomorrow)</label>
+ <div class="out" aria-live="polite">
+  <div class="hl"><b id="ap-avg">–</b><small>steps/day needed over <span id="ap-days"></span></small></div>
+  <div><b id="ap-wk">–</b><small id="ap-wkl"></small></div>
+  <div><b id="ap-rest">–</b><small>steps left</small></div>
+  <div><b id="ap-goal">–</b><small>annual goal</small></div>
+  <div><b id="ap-gap">–</b><small id="ap-gapl"></small></div>
+ </div>
+</div>
+<p class="note">Nothing is sent anywhere: the math runs in your browser.</p>
+
+<h2>Reference table</h2>
+<p>Steps, distance and calories by daily goal over a full year (estimated at a 2.3 ft stride and 0.04 kcal/step for a 154 lb person):</p>
+{annual_ref_table('en')}
+<p class="note">Calories are an estimate: they vary with weight, height, pace and terrain. Consult a health professional for personalised advice.</p>
+
+<h2>How it is calculated</h2>
+<ul>
+ <li><b>Annual goal</b> = daily goal × days in the year (365, or 366 in a leap year).</li>
+ <li><b>Required average</b> = steps left ÷ days remaining in the year. Days remaining include today, unless you choose to start tomorrow.</li>
+ <li><b>Ahead or behind</b> = steps done − daily goal × days elapsed since January 1.</li>
+</ul>
+
+<h2>{int(TODAY[:4])} in review: where do you stand?</h2>
+<p>At year-end, Walkever's History screen shows your cumulative total since January 1: step total, months on target and daily record. Enter your numbers in the calculator above to see exactly what is left before December 31, then set your {int(TODAY[:4]) + 1} goal based on your real annual average. To track a monthly goal alongside your annual one, use the <a href="/en/step-goal-calculator/">monthly step goal calculator</a>.</p>
+""",
+     faq=[("What is a good annual step goal?",
+           "At 10,000 steps a day the annual total is 3,650,000 steps over 365 days — about 1,580 miles (2,555 km). Studies show clear health benefits starting from 7,000 steps a day (2,555,000 steps a year)."),
+          ("How do I calculate my yearly step average?",
+           "Add up your steps since January 1 and divide by the days elapsed. Walkever does it automatically from Apple Health and also shows the required daily average to finish the year."),
+          ("How many miles is 10,000 steps a day for a year?",
+           "About 1,580 miles (2,555 km) over 365 days at a 2.3 ft stride (5 ft 9 in height). Between 1,105 miles at 7,000 steps/day and 1,897 miles at 12,000 steps/day."),
+          ("Does the calculator store my data?",
+           "No. Everything runs in your browser; nothing is sent or stored.")],
+     related=['pace', 'challenge'])
 
 
 # ---------- 5. Average steps per day (age / gender)
@@ -663,25 +792,26 @@ SHORT = {  # link labels
     'compare': {'fr': 'Meilleure application podomètre iPhone', 'en': 'Best step counter app iPhone'},
     'avg': {'fr': 'Moyenne de pas par jour', 'en': 'Average steps per day'},
     'challenge': {'fr': 'Défi 10 000 pas en janvier', 'en': 'January step challenge'},
+    'annual': {'fr': "Calculateur d'objectif annuel de pas", 'en': 'Annual step goal calculator'},
 }
 
 
 HUB = {
     'fr': dict(path='/fr/guides/', label='Guides', tools='Calculateurs',
                title='Guides et calculateurs de pas : objectifs, moyennes, conversions | Walkever',
-               desc="Tous les guides Walkever : combien de pas par jour, moyenne selon l'âge, 10 000 pas en km, calculateur d'objectif mensuel, comparatif d'apps podomètre iPhone et défis.",
+               desc="Tous les guides Walkever : combien de pas par jour, moyenne selon l'âge, 10 000 pas en km, calculateur d'objectif mensuel et annuel, comparatif d'apps podomètre iPhone et défis.",
                h1='Guides et calculateurs pour la marche',
                intro="Des repères sourcés et des outils gratuits pour fixer un objectif de pas réaliste, le convertir en distance et le tenir sur le mois.",
                sections=[('reperes', 'Repères : combien marcher', ['steps', 'avg']),
-                         ('outils', 'Calculateurs', ['pace', 'distance']),
+                         ('outils', 'Calculateurs', ['pace', 'distance', 'annual']),
                          ('apps', 'Applis et défis', ['compare', 'challenge'])]),
     'en': dict(path='/en/guides/', label='Guides', tools='Calculators',
                title='Step guides and calculators: goals, averages, conversions | Walkever',
-               desc='All Walkever guides: how many steps a day, average steps by age, steps to miles, monthly step goal calculator, best iPhone step counter apps and challenges.',
+               desc='All Walkever guides: how many steps a day, average steps by age, steps to miles, monthly and annual step goal calculators, best iPhone step counter apps and challenges.',
                h1='Walking guides and calculators',
                intro='Sourced benchmarks and free tools to set a realistic step goal, turn it into distance and stay on pace all month.',
                sections=[('benchmarks', 'Benchmarks: how much to walk', ['steps', 'avg']),
-                         ('tools', 'Calculators', ['pace', 'distance']),
+                         ('tools', 'Calculators', ['pace', 'distance', 'annual']),
                          ('apps', 'Apps and challenges', ['compare', 'challenge'])]),
 }
 
@@ -695,7 +825,7 @@ def menu(lang):
 
 def footer_links(lang):
     return ' '.join([f'<a href="{HUB[lang]["path"]}">{"Tous les guides" if lang == "fr" else "All guides"}</a>'] +
-                    [f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'avg', 'distance', 'pace', 'compare', 'challenge')])
+                    [f'<a href="{PAGES[k][lang]["path"]}">{SHORT[k][lang]}</a>' for k in ('steps', 'avg', 'distance', 'pace', 'annual', 'compare', 'challenge')])
 
 
 def footer(lang, other_href):
