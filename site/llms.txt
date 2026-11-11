@@ -4,6 +4,7 @@
 
 ## Key facts
 - App Store: https://apps.apple.com/app/id6762572011
+- Google Play: https://play.google.com/store/apps/details?id=fr.davisor.walkever
 - Price: free, no in-app purchases, no ads
 - Platform: iPhone (iOS 15.1+), data source: Apple Health (HealthKit, read-only)
 - Features: today's steps; monthly total and daily average; required daily average to finish the month (with or without today); cumulative lead/lag vs ideal pace with a color-coded progress bar; history by day, month and year; customizable daily goal (10,000 by default)

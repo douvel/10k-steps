@@ -18,6 +18,10 @@ def store(lang, ct):
     return f'https://apps.apple.com/{cc}/app/id{APP_ID}?ct={ct}&mt=8'
 
 
+def play(lang, ct):
+    return f'https://play.google.com/store/apps/details?id=fr.davisor.walkever&hl={lang}&utm_source=site&utm_medium={ct}'
+
+
 def j(o):
     return '<script type="application/ld+json">' + json.dumps(o, ensure_ascii=False, separators=(',', ':')) + '</script>'
 
@@ -832,7 +836,7 @@ def footer(lang, other_href):
     t = L[lang]
     return f"""<footer><div class="wrap">
   <p class="links">{footer_links(lang)}</p>
-  <p><a href="{store(lang, 'site-footer')}">App Store</a> · <a href="{t['privacy']}">{t['privacy_l']}</a> · <a href="mailto:contact@walkever.app">Contact</a> · <a href="{other_href}" hreflang="{'en' if lang=='fr' else 'fr'}">{t['other']}</a></p>
+  <p><a href="{store(lang, 'site-footer')}">App Store</a> · <a href="{play(lang, 'site-footer')}">Google Play</a> · <a href="{t['privacy']}">{t['privacy_l']}</a> · <a href="mailto:contact@walkever.app">Contact</a> · <a href="{other_href}" hreflang="{'en' if lang=='fr' else 'fr'}">{t['other']}</a></p>
   <p>{t['footnote']}</p>
 </div></footer>"""
 
@@ -902,7 +906,7 @@ def render(p):
 <h1>{p['h1']}</h1>
 <div class="answer">{p['answer']}</div>
 {p['body']()}
-<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>{t['promo_t']}</b><p>{t['promo_p']}</p><a class="btn sm" href="{store(lang, ct)}">{t['cta']}</a></div></aside>
+<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>{t['promo_t']}</b><p>{t['promo_p']}</p><a class="btn sm" href="{store(lang, ct)}">{t['cta']}</a> <a class="btn sm alt" href="{play(lang, ct)}">{'Google Play'}</a></div></aside>
 <h2>{t['faq']}</h2>
 <div class="faq">{faq_html}</div>
 <h2>{t['related']}</h2>
@@ -975,7 +979,7 @@ def render_hub(lang):
 <h1>{h['h1']}</h1>
 <p class="lead">{h['intro']}</p>
 {secs}
-<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>{t['promo_t']}</b><p>{t['promo_p']}</p><a class="btn sm" href="{store(lang, 'site-guides')}">{t['cta']}</a></div></aside>
+<aside class="promo"><img src="/img/logo-180.png" width="72" height="72" alt="Walkever"><div><b>{t['promo_t']}</b><p>{t['promo_p']}</p><a class="btn sm" href="{store(lang, 'site-guides')}">{t['cta']}</a> <a class="btn sm alt" href="{play(lang, 'site-guides')}">Google Play</a></div></aside>
 </main>
 {footer(lang, other['path'])}
 </body>
@@ -1079,6 +1083,7 @@ def main():
              "> Walkever (iOS, formerly \"Objectif 10K Pas\") is a free iPhone step tracker that tells you whether you are on pace to hit your step goal by day, month and year. It reads steps from Apple Health. No ads, no account, no data collected; everything stays on the iPhone. Available in English and French.", "",
              "## Key facts",
              f"- App Store: https://apps.apple.com/app/id{APP_ID}",
+             "- Google Play: https://play.google.com/store/apps/details?id=fr.davisor.walkever",
              "- Price: free, no in-app purchases, no ads",
              "- Platform: iPhone (iOS 15.1+), data source: Apple Health (HealthKit, read-only)",
              "- Features: today's steps; monthly total and daily average; required daily average to finish the month (with or without today); cumulative lead/lag vs ideal pace with a color-coded progress bar; history by day, month and year; customizable daily goal (10,000 by default)",
