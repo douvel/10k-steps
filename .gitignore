@@ -21,3 +21,6 @@ expo-env.d.ts
 # @end expo-cli
 .vercel
 .env*
+
+# Clés de service (jamais commitées)
+.secrets/
