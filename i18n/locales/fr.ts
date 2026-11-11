@@ -86,6 +86,8 @@ const fr: Translations = {
     invalidValueMessage: 'Entrez un objectif supérieur à 0.',
     valueTooHighTitle: 'Valeur trop élevée',
     valueTooHighMessage: (max) => `L'objectif ne peut pas dépasser ${max} pas.`,
+    analyticsTitle: 'STATISTIQUES D\'USAGE ANONYMES',
+    analyticsDescription: 'Aide à améliorer l\'app. Aucune donnée de santé ni nombre de pas n\'est jamais envoyé.',
     language: 'LANGUE',
     languageEnglish: 'English',
     languageFrench: 'Français',

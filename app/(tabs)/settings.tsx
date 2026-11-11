@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, Switch,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useStepGoal } from '../../hooks/useStepGoal';
 import { useLocale, SUPPORTED_LOCALES } from '../../i18n';
+import { isAnalyticsEnabled, setAnalyticsEnabled, track } from '../../utils/analytics';
 
 const ACCENT = '#FF5C2E';
 const BG = '#0A0A0F';
@@ -19,6 +20,7 @@ export default function SettingsScreen() {
   const { dailyGoal, saveGoal, isLoading } = useStepGoal();
   const [inputValue, setInputValue] = useState('');
   const [saved, setSaved] = useState(false);
+  const [analyticsOn, setAnalyticsOn] = useState(isAnalyticsEnabled());
 
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -36,6 +38,7 @@ export default function SettingsScreen() {
       return;
     }
     await saveGoal(parsed);
+    track('goal_changed', { goal: parsed });
     setInputValue('');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -156,7 +159,7 @@ export default function SettingsScreen() {
                 <TouchableOpacity
                   key={locale}
                   style={[styles.flagBtn, active && styles.flagBtnActive]}
-                  onPress={() => setLocalePreference(locale)}
+                  onPress={() => { setLocalePreference(locale); track('language_changed', { locale }); }}
                   activeOpacity={0.7}
                   accessibilityLabel={locale === 'fr' ? t.settings.languageFrench : t.settings.languageEnglish}
                 >
@@ -165,6 +168,19 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+        </View>
+
+        {/* Analytics opt-out */}
+        <View style={styles.analyticsRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.languageLabel}>{t.settings.analyticsTitle}</Text>
+            <Text style={styles.analyticsDesc}>{t.settings.analyticsDescription}</Text>
+          </View>
+          <Switch
+            value={analyticsOn}
+            onValueChange={(v) => { setAnalyticsOn(v); setAnalyticsEnabled(v); }}
+            trackColor={{ true: ACCENT }}
+          />
         </View>
 
       </ScrollView>
@@ -250,6 +266,8 @@ const styles = StyleSheet.create({
   infoText: { fontSize: 12, color: 'rgba(255,255,255,0.35)', lineHeight: 20 },
   infoTextBold: { color: 'rgba(255,255,255,0.5)', fontWeight: '600' },
 
+  analyticsRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 28 },
+  analyticsDesc: { fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 },
   languageSection: { alignItems: 'center', marginTop: 24 },
   languageLabel: {
     fontSize: 10, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase',

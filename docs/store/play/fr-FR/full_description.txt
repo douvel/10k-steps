@@ -1,0 +1,20 @@
+Tu marches déjà. Walkever te dit si tu es dans le rythme pour tenir ton objectif, sur le jour, le mois et l'année.
+
+CE QUE TU VOIS EN UN COUP D'ŒIL
+• Tes pas du jour en temps réel : l'indicateur passe au vert quand l'objectif est atteint.
+• Le total du mois, ta moyenne par jour et les pas qu'il te reste à faire.
+• La moyenne requise par jour pour finir le mois à temps, avec ou sans aujourd'hui.
+• Ton avance ou ton retard cumulé sur le rythme idéal, avec une barre de progression qui change de couleur.
+
+UN HISTORIQUE QUI PARLE
+• Tes pas jour par jour, mois par mois et année par année.
+• Touche un jour, un mois ou une année pour voir le total exact, le pourcentage de l'objectif et la moyenne quotidienne.
+• Pour l'année en cours : ton avance ou ton retard sur le rythme de ton objectif.
+
+SIMPLE ET RESPECTUEUX
+• Ton objectif quotidien est personnalisable (10 000 pas par défaut) ; l'objectif mensuel se calcule tout seul.
+• Lecture directe de Health Connect : aucune saisie manuelle.
+• Aucune donnée collectée, aucune publicité, gratuit.
+• Disponible en français et en anglais.
+
+Walkever utilise Health Connect (lecture seule de ton nombre de pas) pour afficher ta progression. Tes données restent sur ton téléphone.

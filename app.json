@@ -24,9 +24,9 @@
       },
       "package": "fr.davisor.walkever",
       "permissions": [
-        "android.permission.health.READ_STEPS",
-        "android.permission.ACTIVITY_RECOGNITION"
-      ]
+        "android.permission.health.READ_STEPS"
+      ],
+      "versionCode": 6
     },
     "plugins": [
       "expo-router",
@@ -36,7 +36,18 @@
           "isClinicalDataEnabled": false
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 36
+          }
+        }
+      ]
     ],
     "scheme": "stepsobjective",
     "experiments": {

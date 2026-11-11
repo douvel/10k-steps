@@ -11,13 +11,24 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_snpPjFr97iDAmgZSLRQECZw5PYrnZ8SoTQyv4vMGrbcH",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
+      }
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_snpPjFr97iDAmgZSLRQECZw5PYrnZ8SoTQyv4vMGrbcH",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
       }
     }
   },
@@ -25,6 +36,10 @@
     "production": {
       "ios": {
         "ascAppId": "6762572011"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
       }
     }
   }
