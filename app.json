@@ -26,7 +26,7 @@
       "permissions": [
         "android.permission.health.READ_STEPS"
       ],
-      "versionCode": 8
+      "versionCode": 9
     },
     "plugins": [
       "expo-router",
@@ -38,6 +38,7 @@
       ],
       "expo-localization",
       "expo-health-connect",
+      "./plugins/withHealthConnectDelegate",
       [
         "expo-build-properties",
         {
