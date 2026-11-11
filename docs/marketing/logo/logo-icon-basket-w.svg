@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#26262e"/><stop offset="1" stop-color="#0b0b0f"/>
+    </linearGradient>
+    <linearGradient id="or" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff9a24"/><stop offset="1" stop-color="#ff5e2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g transform="translate(512 512) scale(1.0) translate(-512 -512) translate(0 -10)">
+    <!-- tige -->
+    <path d="M185 640 C165 560 170 470 205 420 C225 392 262 388 292 402 C330 420 380 428 420 408 C440 380 462 330 500 308 C528 292 556 306 566 336 C584 392 640 430 720 456 C800 482 872 520 884 590 L884 640 Z" fill="url(#or)"/>
+    <!-- bande basse plus foncée -->
+    <path d="M178 596 C260 596 340 626 440 626 C560 626 700 590 884 612 L884 640 L185 640 Z" fill="#e8501d" opacity="0.8"/>
+    <!-- lacets -->
+    <g stroke="#fff" stroke-width="22" stroke-linecap="round">
+      <line x1="524" y1="378" x2="602" y2="352"/>
+      <line x1="572" y1="410" x2="650" y2="384"/>
+      <line x1="626" y1="438" x2="704" y2="414"/>
+    </g>
+    <!-- W sur le flanc -->
+    <path d="M236 486 L284 580 L330 506 L376 580 L424 486" fill="none" stroke="#fff" stroke-width="36"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- semelle -->
+    <path d="M150 624 L900 624 C916 624 926 652 906 682 C880 718 820 734 740 734 L300 734 C210 734 140 714 140 670 C140 642 146 624 150 624 Z" fill="#fff"/>
+  </g>
+</svg>
