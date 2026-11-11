@@ -84,6 +84,8 @@ const en = {
     invalidValueMessage: 'Enter a goal greater than 0.',
     valueTooHighTitle: 'Value too high',
     valueTooHighMessage: (max: string) => `The goal cannot exceed ${max} steps.`,
+    analyticsTitle: 'ANONYMOUS USAGE STATISTICS',
+    analyticsDescription: 'Helps improve the app. No health data or step counts are ever sent.',
     language: 'LANGUAGE',
     languageEnglish: 'English',
     languageFrench: 'Français',

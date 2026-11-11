@@ -11,7 +11,11 @@
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_snpPjFr97iDAmgZSLRQECZw5PYrnZ8SoTQyv4vMGrbcH",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
+      }
     },
     "production": {
       "autoIncrement": true,
@@ -21,6 +25,10 @@
       },
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_snpPjFr97iDAmgZSLRQECZw5PYrnZ8SoTQyv4vMGrbcH",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://eu.i.posthog.com"
       }
     }
   },
